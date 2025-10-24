@@ -376,6 +376,26 @@
 
         /* * RESPONSIVENESS
          */
+        #description-toolbar {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 8px;
+            align-items: center;
+        }
+
+        #description-toolbar button, #description-toolbar select {
+            border: 1px solid var(--md-sys-color-outline-variant);
+            background-color: var(--md-sys-color-surface-container-low);
+            color: var(--md-sys-color-on-surface-variant);
+            border-radius: 4px;
+            padding: 4px 8px;
+            cursor: pointer;
+        }
+
+        b, strong {
+            font-weight: 900;
+        }
+
         @media (max-width: 768px) {
             .app-container {
                 /* Stack sidebar and main content vertically */
@@ -423,6 +443,10 @@
                     Save Board
                     <span slot="icon" class="material-icons-outlined">save</span>
                 </md-outlined-button>
+                <md-filled-button id="load-card-button">
+                    Load Card
+                    <span slot="icon" class="material-icons-outlined">note_add</span>
+                </md-filled-button>
             </div>
             
             <div class="sidebar-section">
@@ -443,6 +467,7 @@
             
             <!-- Hidden inputs for file operations -->
             <input type="file" id="file-loader" class="hidden-file-input" accept=".VBoard">
+            <input type="file" id="card-loader" class="hidden-file-input" accept=".vbcard">
             <a id="file-saver" class="hidden-file-input"></a>
         </aside>
 
@@ -531,8 +556,27 @@
             
             <md-outlined-text-field label="Title" id="card-title" required></md-outlined-text-field>
 
-            <md-outlined-text-field label="Brief Description" id="card-description"></md-outlined-text-field>
+            <label for="card-description-editor">Brief Description</label>
+            <div id="description-toolbar">
+                <button type="button" data-command="bold"><b>B</b></button>
+                <button type="button" data-command="italic"><i>I</i></button>
+                <button type="button" data-command="insertUnorderedList">●</button>
+                <select data-command="justify">
+                    <option value="justifyLeft">Left</option>
+                    <option value="justifyCenter">Center</option>
+                    <option value="justifyRight">Right</option>
+                    <option value="justifyFull">Justify</option>
+                </select>
+                <select data-command="fontSize">
+                    <option value="1">Small</option>
+                    <option value="3">Normal</option>
+                    <option value="5">Large</option>
+                    <option value="7">Huge</option>
+                </select>
+            </div>
+            <div id="card-description" contenteditable="true" style="border: 1px solid #ccc; padding: 10px; min-height: 150px; white-space: pre-wrap;"></div>
 
+            <label for="card-comment">Comment</label>
             <div id="comment-toolbar">
                 <button type="button" id="bold-button">B</button>
                 <button type="button" id="italic-button">I</button>
@@ -560,8 +604,9 @@
         </form>
         <div slot="actions">
             <md-text-button id="delete-button">Delete</md-text-button>
+            <md-outlined-button id="save-card-button">Save Card</md-outlined-button>
             <md-text-button form="card-form" value="cancel">Cancel</md-text-button>
-            <md-filled-button form="card-form" value="save">Save</md-filled-button>
+            <md-filled-button form="card-form" value="save">Save to Board</md-filled-button>
         </div>
     </md-dialog>
     
@@ -754,7 +799,7 @@
                     document.getElementById('card-id').value = card.id;
                     document.getElementById('card-lane-id').value = card.laneId;
                     titleEl.value = card.title;
-                    document.getElementById('card-description').value = card.description;
+                    document.getElementById('card-description').innerHTML = card.description;
                     document.getElementById('card-comment').innerHTML = card.comment;
                     document.getElementById('card-owner').value = card.owner;
                     document.getElementById('card-due-date').value = card.dueDate;
@@ -771,6 +816,7 @@
                     cardModal.querySelector('[slot="headline"]').textContent = 'Create New Card';
                     document.getElementById('card-id').value = '';
                     document.getElementById('card-lane-id').value = defaultLaneId || 'idea'; // Default to 'idea'
+                    document.getElementById('card-description').innerHTML = '';
                     document.getElementById('card-comment').innerHTML = '';
                     document.getElementById('card-reminder-days').value = 3;
                     document.getElementById('card-created-date').textContent = '';
@@ -810,7 +856,7 @@
                     id: cardId || generateUUID(),
                     laneId: document.getElementById('card-lane-id').value,
                     title: document.getElementById('card-title').value,
-                    description: document.getElementById('card-description').value,
+                    description: document.getElementById('card-description').innerHTML,
                     comment: document.getElementById('card-comment').innerHTML,
                     owner: document.getElementById('card-owner').value,
                     dueDate: document.getElementById('card-due-date').value,
@@ -848,6 +894,39 @@
                     renderBoard();
                     cardModal.close(); // Manually close modal after deletion
                     showSnackbar('Card deleted.');
+                }
+            }
+
+            /**
+             * Saves a single card to a local .vbcard file
+             */
+            function saveCard() {
+                const cardData = {
+                    title: document.getElementById('card-title').value,
+                    description: document.getElementById('card-description').value,
+                    comment: document.getElementById('card-comment').innerHTML,
+                    owner: document.getElementById('card-owner').value,
+                    dueDate: document.getElementById('card-due-date').value,
+                    reminderDays: parseInt(document.getElementById('card-reminder-days').value) || 0,
+                    color: document.getElementById('card-color').value,
+                    textColor: document.getElementById('card-text-color').value,
+                };
+
+                try {
+                    const data = JSON.stringify(cardData, null, 2);
+                    const blob = new Blob([data], { type: 'application/json' });
+                    const url = URL.createObjectURL(blob);
+
+                    fileSaver.href = url;
+                    const timestamp = new Date().toISOString().slice(0, 10);
+                    fileSaver.download = `${cardData.title.replace(/\s/g, '_')}_${timestamp}.vbcard`;
+                    fileSaver.click();
+
+                    URL.revokeObjectURL(url);
+                    showSnackbar('Card saved successfully!');
+                } catch (error) {
+                    console.error('Error saving card:', error);
+                    showSnackbar('Error: Could not save card.');
                 }
             }
             
@@ -900,6 +979,43 @@
                 };
                 reader.readAsText(file);
                 
+                // Reset file input to allow loading the same file again
+                event.target.value = null;
+            }
+
+            /**
+             * Loads a single .vbcard file from the user's computer
+             * @param {Event} event - The file input change event
+             */
+            function loadCard(event) {
+                const file = event.target.files[0];
+                if (!file) return;
+
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const cardData = JSON.parse(e.target.result);
+                        // Basic validation
+                        if (cardData && cardData.title) {
+                            const newCard = {
+                                id: generateUUID(),
+                                laneId: 'idea', // Default to 'idea' lane
+                                createdDate: new Date().toISOString(),
+                                ...cardData,
+                            };
+                            boardState.cards.push(newCard);
+                            renderBoard();
+                            showSnackbar('Card loaded successfully!');
+                        } else {
+                            throw new Error('Invalid file format.');
+                        }
+                    } catch (error) {
+                        console.error('Error loading card:', error);
+                        showSnackbar('Error: Could not load card. File may be corrupt.');
+                    }
+                };
+                reader.readAsText(file);
+
                 // Reset file input to allow loading the same file again
                 event.target.value = null;
             }
@@ -994,6 +1110,9 @@
             saveButton.addEventListener('click', saveBoard);
             loadButton.addEventListener('click', () => fileLoader.click());
             fileLoader.addEventListener('change', loadBoard);
+            const cardLoader = document.getElementById('card-loader');
+            document.getElementById('load-card-button').addEventListener('click', () => cardLoader.click());
+            cardLoader.addEventListener('change', loadCard);
             
             // Reminder Button
             sendRemindersButton.addEventListener('click', checkReminders);
@@ -1018,12 +1137,24 @@
             
             // Modal Delete Button
             deleteButton.addEventListener('click', deleteCardFromModal);
+            document.getElementById('save-card-button').addEventListener('click', saveCard);
             
             // Update reminder info when due date or reminder days change
             document.getElementById('card-due-date').addEventListener('input', (e) => updateReminderInfo(e.target.value, document.getElementById('card-reminder-days').value));
             document.getElementById('card-reminder-days').addEventListener('input', (e) => updateReminderInfo(document.getElementById('card-due-date').value, e.target.value));
 
-            // Rich Text Editor Toolbar
+            // Description Rich Text Editor Toolbar
+            document.getElementById('description-toolbar').addEventListener('click', (e) => {
+                const target = e.target;
+                if (target.tagName === 'BUTTON' || target.tagName === 'SELECT') {
+                    const command = target.dataset.command;
+                    const value = target.value || null;
+                    document.execCommand(command, false, value);
+                    document.getElementById('card-description').focus();
+                }
+            });
+
+            // Comment Rich Text Editor Toolbar
             document.getElementById('bold-button').addEventListener('click', () => {
                 document.execCommand('bold');
             });
