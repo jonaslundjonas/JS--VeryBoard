@@ -646,7 +646,6 @@
                 const loadButton = document.getElementById('load-button');
                 const fileLoader = document.getElementById('file-loader');
                 const fileSaver = document.getElementById('file-saver');
-                const reminderDaysInput = document.getElementById('reminder-days');
                 const sendRemindersButton = document.getElementById('send-reminders-button');
                 const remindersModal = document.getElementById('reminders-modal');
                 const remindersList = document.getElementById('reminders-list');
@@ -664,7 +663,7 @@
                  * Shows a snackbar notification
                  * @param {string} message - The message to display
                  */
-                function showSnackbar(message) {
+                window.showSnackbar = function(message) {
                     snackbar.labelText = message;
                     snackbar.open = true; // Use the 'open' property instead of show()
                 }
@@ -908,7 +907,7 @@
             /**
              * Checks for cards that are due soon and shows a modal
              */
-            function checkReminders() {
+            window.checkReminders = function() {
                 const today = new Date();
                 today.setHours(0, 0, 0, 0);
                 
@@ -933,19 +932,55 @@
                     return;
                 }
                 
-                // Build list for modal
-                const listHtml = upcomingCards
-                    .sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate)) // Sort by due date
-                    .map(card => `
-                        <li>
-                            <strong>${card.title}</strong>
-                            <div>Due: ${new Date(card.dueDate).toLocaleDateString()}</div>
-                            <div>Owner: ${card.owner || 'Unassigned'}</div>
-                        </li>
-                    `).join('');
+                // Group cards by owner
+                const remindersByOwner = upcomingCards.reduce((acc, card) => {
+                    const owner = card.owner || 'Unassigned';
+                    if (!acc[owner]) {
+                        acc[owner] = [];
+                    }
+                    acc[owner].push(card);
+                    return acc;
+                }, {});
+
+                triggerEmailClient(remindersByOwner);
+            }
+
+            /**
+             * Triggers the user's default email client with a pre-filled email
+             * @param {object} remindersByOwner - An object with owners as keys and arrays of cards as values
+             */
+            function triggerEmailClient(remindersByOwner) {
+                // If in test mode, don't trigger the email client
+                if (document.body.dataset.testMode === 'true') {
+                    console.log('Test mode: triggerEmailClient mocked. Reminders:', remindersByOwner);
+                    window.emailClientTriggered = true;
+                    return;
+                }
+
+                const owners = Object.keys(remindersByOwner).filter(owner => owner !== 'Unassigned');
+                if (owners.length === 0) {
+                    showSnackbar('No reminders to send for assigned owners.');
+                    return;
+                }
+
+                const subject = 'Upcoming Task Reminders from VeryBoard';
+                let body = 'Hello,\n\nHere are your upcoming task reminders:\n\n';
+
+                for (const owner in remindersByOwner) {
+                    if (owner !== 'Unassigned') {
+                        body += `--- For ${owner} ---\n`;
+                        remindersByOwner[owner].forEach(card => {
+                            body += `  - Task: ${card.title}\n`;
+                            body += `    Description: ${card.description}\n`;
+                            body += `    Due Date: ${new Date(card.dueDate).toLocaleDateString()}\n\n`;
+                        });
+                    }
+                }
+
+                const mailtoLink = `mailto:?bcc=${owners.join(',')}&subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
                 
-                remindersList.innerHTML = `<ul>${listHtml}</ul>`;
-                remindersModal.open = true; // Use the 'open' property instead of show()
+                showSnackbar('Opening your email client to send reminders...');
+                window.location.href = mailtoLink;
             }
 
             // --- EVENT LISTENERS ---
@@ -960,11 +995,6 @@
             loadButton.addEventListener('click', () => fileLoader.click());
             fileLoader.addEventListener('change', loadBoard);
             
-            // Theme Toggle
-            themeToggle.addEventListener('change', (e) => {
-                document.body.classList.toggle('dark-mode', e.target.selected);
-            });
-
             // Reminder Button
             sendRemindersButton.addEventListener('click', checkReminders);
             
@@ -1048,4 +1078,3 @@
     </script>
 </body>
 </html>
-
