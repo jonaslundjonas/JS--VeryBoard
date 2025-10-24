@@ -1,0 +1,999 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VeryBoard</title>
+    
+    <!-- Load Material Design 3 Web Components -->
+    <script type="module" src="https://cdn.jsdelivr.net/npm/material-web@1.4.1/dist/material-web.js"></script>
+    
+    <!-- Load Fonts: Roboto (standard) and Material Icons (for icons) -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+
+    <style>
+        /* * MATERIAL 3 THEME & COLOR DEFINITIONS (LIGHT/DARK)
+         */
+        :root {
+            --md-sys-color-primary: #6750A4;
+            --md-sys-color-on-primary: #FFFFFF;
+            --md-sys-color-primary-container: #EADDFF;
+            --md-sys-color-on-primary-container: #21005D;
+            --md-sys-color-secondary: #625B71;
+            --md-sys-color-on-secondary: #FFFFFF;
+            --md-sys-color-secondary-container: #E8DEF8;
+            --md-sys-color-on-secondary-container: #1D192B;
+            --md-sys-color-tertiary: #7D5260;
+            --md-sys-color-on-tertiary: #FFFFFF;
+            --md-sys-color-tertiary-container: #FFD8E4;
+            --md-sys-color-on-tertiary-container: #31111D;
+            --md-sys-color-error: #B3261E;
+            --md-sys-color-on-error: #FFFFFF;
+            --md-sys-color-error-container: #F9DEDC;
+            --md-sys-color-on-error-container: #410E0B;
+            --md-sys-color-background: #FFFBFE;
+            --md-sys-color-on-background: #1C1B1F;
+            --md-sys-color-surface: #FFFBFE;
+            --md-sys-color-on-surface: #1C1B1F;
+            --md-sys-color-surface-variant: #E7E0EC;
+            --md-sys-color-on-surface-variant: #49454F;
+            --md-sys-color-outline: #79747E;
+            --md-sys-color-outline-variant: #C4C7C5;
+            --md-sys-color-shadow: #000000;
+            --md-sys-color-scrim: #000000;
+            --md-sys-color-inverse-surface: #313033;
+            --md-sys-color-inverse-on-surface: #F4EFF4;
+            --md-sys-color-inverse-primary: #D0BCFF;
+            --md-sys-color-surface-dim: #DED8E1;
+            --md-sys-color-surface-bright: #FFFBFE;
+            --md-sys-color-surface-container-lowest: #FFFFFF;
+            --md-sys-color-surface-container-low: #F7F2FA;
+            --md-sys-color-surface-container: #F3EDF7;
+            --md-sys-color-surface-container-high: #ECE6F0;
+            --md-sys-color-surface-container-highest: #E6E0E9;
+        }
+        
+        body.dark-mode {
+            color-scheme: dark;
+            --md-sys-color-primary: #D0BCFF;
+            --md-sys-color-on-primary: #381E72;
+            --md-sys-color-primary-container: #4F378B;
+            --md-sys-color-on-primary-container: #EADDFF;
+            --md-sys-color-secondary: #CCC2DC;
+            --md-sys-color-on-secondary: #332D41;
+            --md-sys-color-secondary-container: #4A4458;
+            --md-sys-color-on-secondary-container: #E8DEF8;
+            --md-sys-color-tertiary: #EFB8C8;
+            --md-sys-color-on-tertiary: #492532;
+            --md-sys-color-tertiary-container: #633B48;
+            --md-sys-color-on-tertiary-container: #FFD8E4;
+            --md-sys-color-error: #F2B8B5;
+            --md-sys-color-on-error: #601410;
+            --md-sys-color-error-container: #8C1D18;
+            --md-sys-color-on-error-container: #F9DEDC;
+            --md-sys-color-background: #1C1B1F;
+            --md-sys-color-on-background: #E6E1E5;
+            --md-sys-color-surface: #1C1B1F;
+            --md-sys-color-on-surface: #E6E1E5;
+            --md-sys-color-surface-variant: #49454F;
+            --md-sys-color-on-surface-variant: #CAC4D0;
+            --md-sys-color-outline: #938F99;
+            --md-sys-color-outline-variant: #444746;
+            --md-sys-color-shadow: #000000;
+            --md-sys-color-scrim: #000000;
+            --md-sys-color-inverse-surface: #E6E1E5;
+            --md-sys-color-inverse-on-surface: #313033;
+            --md-sys-color-inverse-primary: #6750A4;
+            --md-sys-color-surface-dim: #141218;
+            --md-sys-color-surface-bright: #3B383E;
+            --md-sys-color-surface-container-lowest: #0F0D13;
+            --md-sys-color-surface-container-low: #1C1B1F;
+            --md-sys-color-surface-container: #211F26;
+            --md-sys-color-surface-container-high: #2B2931;
+            --md-sys-color-surface-container-highest: #36343B;
+        }
+
+        /* * BASE & LAYOUT STYLES
+         */
+        body {
+            margin: 0;
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--md-sys-color-background);
+            color: var(--md-sys-color-on-background);
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        .app-container {
+            display: grid;
+            /* Sidebar, Main Content */
+            grid-template-columns: 280px 1fr;
+            height: 100vh;
+        }
+
+        /* * SIDEBAR
+         */
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            padding: 16px;
+            gap: 20px;
+            background-color: var(--md-sys-color-surface-container-low);
+            border-right: 1px solid var(--md-sys-color-outline-variant);
+            overflow-y: auto;
+        }
+
+        .sidebar h1 {
+            font-size: 1.75rem;
+            font-weight: 500;
+            margin: 0 0 8px 0;
+            color: var(--md-sys-color-primary);
+        }
+
+        .sidebar-section {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .sidebar-section h2 {
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: var(--md-sys-color-on-surface-variant);
+            text-transform: uppercase;
+            margin: 0;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--md-sys-color-outline-variant);
+        }
+
+        .theme-toggle {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: var(--md-sys-color-on-surface-variant);
+        }
+        
+        .theme-toggle span {
+            font-size: 0.9rem;
+        }
+        
+        md-switch {
+            --md-switch-selected-track-color: var(--md-sys-color-primary);
+            --md-switch-selected-handle-color: var(--md-sys-color-on-primary);
+            --md-switch-selected-hover-handle-color: var(--md-sys-color-on-primary);
+            --md-switch-selected-pressed-handle-color: var(--md-sys-color-on-primary);
+        }
+
+        /* Ensure all buttons in sidebar take full width */
+        .sidebar md-filled-button,
+        .sidebar md-outlined-button {
+            width: 100%;
+        }
+
+        /* * MAIN CONTENT (BOARD & FOOTER)
+         */
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            overflow: hidden; /* Prevents whole page scroll */
+        }
+
+        .kanban-board {
+            display: flex;
+            flex-grow: 1; /* Takes up remaining vertical space */
+            gap: 16px;
+            padding: 24px;
+            overflow-x: auto; /* Allows horizontal scrolling of lanes */
+            background-color: var(--md-sys-color-surface);
+        }
+
+        .swim-lane {
+            flex: 1; /* Each lane takes equal space */
+            min-width: 320px;
+            max-width: 360px;
+            display: flex;
+            flex-direction: column;
+            background-color: var(--md-sys-color-surface-container);
+            border-radius: 12px;
+            border: 1px solid var(--md-sys-color-outline-variant);
+            box-shadow: 0 1px 3px var(--md-sys-color-shadow-0-1);
+        }
+
+        .swim-lane h2 {
+            font-size: 1.1rem;
+            font-weight: 500;
+            padding: 16px;
+            margin: 0;
+            color: var(--md-sys-color-on-surface);
+            border-bottom: 1px solid var(--md-sys-color-outline-variant);
+        }
+
+        .card-list {
+            flex-grow: 1; /* Fills the lane */
+            padding: 8px;
+            min-height: 100px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            overflow-y: auto; /* Allows scrolling within a lane */
+            border-radius: 0 0 12px 12px;
+            transition: background-color 0.2s ease;
+        }
+        
+        .card-list.drag-over {
+            /* Highlight lane when dragging over */
+            background-color: var(--md-sys-color-primary-container);
+        }
+
+        .new-card-button {
+            margin: 8px;
+        }
+
+        /* * KANBAN CARD
+         */
+        .kanban-card {
+            display: block;
+            padding: 12px;
+            background-color: var(--md-sys-color-surface-container-high);
+            border-radius: 8px;
+            border: 1px solid var(--md-sys-color-outline-variant);
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+            cursor: grab;
+            transition: box-shadow 0.2s ease, transform 0.2s ease, opacity 0.2s ease;
+        }
+
+        .kanban-card:hover {
+            box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+        }
+        
+        /* Style for the card being dragged */
+        .kanban-card.dragging {
+            opacity: 0.5;
+            transform: rotate(3deg);
+            cursor: grabbing;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .kanban-card h3 {
+            font-size: 1rem;
+            font-weight: 500;
+            margin: 0 0 4px;
+            color: var(--md-sys-color-on-surface);
+        }
+        
+        .kanban-card p {
+            font-size: 0.875rem;
+            margin: 0 0 12px;
+            color: var(--md-sys-color-on-surface-variant);
+            white-space: pre-wrap; /* Respects newlines in description */
+            word-break: break-word;
+        }
+        
+        .card-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.75rem;
+            color: var(--md-sys-color-on-surface-variant);
+        }
+        
+        .card-footer .owner {
+            font-weight: 500;
+            max-width: 150px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        
+        .card-footer .due-date.overdue {
+            color: var(--md-sys-color-error);
+            font-weight: 500;
+        }
+
+        /* * MODAL (DIALOG) STYLES
+         */
+         #card-modal md-dialog {
+            --md-dialog-container-color: var(--md-sys-color-surface-container-high);
+         }
+         
+         #card-form {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            min-width: 400px;
+         }
+         
+         /* Make text fields and text areas full width */
+         #card-form md-text-field,
+         #card-form md-filled-text-field {
+            width: 100%;
+         }
+
+         .form-row {
+             display: flex;
+             gap: 16px;
+         }
+
+         .form-row > * {
+             flex: 1;
+         }
+         
+         .form-info {
+             font-size: 0.8rem;
+             color: var(--md-sys-color-on-surface-variant);
+         }
+         
+         /* Custom style for the delete button */
+         #delete-button {
+             --md-text-button-label-text-color: var(--md-sys-color-error);
+             margin-right: auto; /* Pushes to the far left */
+         }
+         
+         #reminders-modal ul {
+             list-style-type: none;
+             padding-left: 0;
+         }
+         
+         #reminders-modal li {
+             padding: 8px;
+             border-bottom: 1px solid var(--md-sys-color-outline-variant);
+         }
+         #reminders-modal li:last-child {
+             border-bottom: none;
+         }
+         
+         #reminders-modal strong {
+             color: var(--md-sys-color-primary);
+         }
+
+        /* * FOOTER
+         */
+        footer {
+            text-align: center;
+            padding: 12px;
+            font-size: 0.75rem;
+            color: var(--md-sys-color-on-surface-variant);
+            background-color: var(--md-sys-color-surface-container-low);
+            border-top: 1px solid var(--md-sys-color-outline-variant);
+        }
+        
+        /* Hidden file inputs */
+        .hidden-file-input {
+            display: none;
+        }
+
+        /* * RESPONSIVENESS
+         */
+        @media (max-width: 768px) {
+            .app-container {
+                /* Stack sidebar and main content vertically */
+                grid-template-columns: 1fr;
+                grid-template-rows: auto 1fr; /* Sidebar height auto, main content fills rest */
+                height: auto; /* Allow page to scroll on mobile */
+            }
+
+            .sidebar {
+                border-right: none;
+                border-bottom: 1px solid var(--md-sys-color-outline-variant);
+            }
+
+            .kanban-board {
+                padding: 16px;
+                /* Horizontal scrolling is still the best for kanban on mobile */
+            }
+            
+            #card-form {
+                min-width: 80vw;
+            }
+
+            .form-row {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Main App Layout -->
+    <div class="app-container">
+        
+        <!-- Sidebar / Menu -->
+        <aside class="sidebar">
+            <h1>VeryBoard</h1>
+            
+            <div class="sidebar-section">
+                <h2>Board</h2>
+                <md-filled-button id="load-button">
+                    Load Board
+                    <span slot="icon" class="material-icons-outlined">folder_open</span>
+                </md-filled-button>
+                <md-outlined-button id="save-button">
+                    Save Board
+                    <span slot="icon" class="material-icons-outlined">save</span>
+                </md-outlined-button>
+            </div>
+            
+            <div class="sidebar-section">
+                <h2>Settings</h2>
+                <div class="theme-toggle">
+                    <span>Dark Theme</span>
+                    <md-switch id="theme-toggle"></md-switch>
+                </div>
+            </div>
+
+            <div class="sidebar-section">
+                <h2>Reminders</h2>
+                <md-text-field id="reminder-days" label="Days before due" type="number" value="3" min="0">
+                    <span slot="supporting-text">Days before due date to remind.</span>
+                </md-text-field>
+                <md-filled-button id="send-reminders-button">
+                    Check Reminders
+                    <span slot="icon" class="material-icons-outlined">notifications_active</span>
+                </md-filled-button>
+            </div>
+            
+            <!-- Hidden inputs for file operations -->
+            <input type="file" id="file-loader" class="hidden-file-input" accept=".VBoard">
+            <a id="file-saver" class="hidden-file-input"></a>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            
+            <!-- Kanban Board -->
+            <div id="board" class="kanban-board">
+                
+                <!-- Swim Lane: Idea -->
+                <div class="swim-lane" id="lane-idea">
+                    <h2>Idea</h2>
+                    <div class="card-list" data-lane-id="idea">
+                        <!-- Cards will be dynamically inserted here -->
+                    </div>
+                    <md-filled-tonal-button class="new-card-button" data-lane-id="idea">
+                        New Card
+                        <span slot="icon" class="material-icons-outlined">add</span>
+                    </md-filled-tonal-button>
+                </div>
+                
+                <!-- Swim Lane: To do -->
+                <div class="swim-lane" id="lane-todo">
+                    <h2>To do</h2>
+                    <div class="card-list" data-lane-id="todo">
+                        <!-- Cards will be dynamically inserted here -->
+                    </div>
+                    <md-filled-tonal-button class="new-card-button" data-lane-id="todo">
+                        New Card
+                        <span slot="icon" class="material-icons-outlined">add</span>
+                    </md-filled-tonal-button>
+                </div>
+                
+                <!-- Swim Lane: Ongoing -->
+                <div class="swim-lane" id="lane-ongoing">
+                    <h2>Ongoing</h2>
+                    <div class="card-list" data-lane-id="ongoing">
+                        <!-- Cards will be dynamically inserted here -->
+                    </div>
+                    <md-filled-tonal-button class="new-card-button" data-lane-id="ongoing">
+                        New Card
+                        <span slot="icon" class="material-icons-outlined">add</span>
+                    </md-filled-tonal-button>
+                </div>
+                
+                <!-- Swim Lane: Approved -->
+                <div class="swim-lane" id="lane-approved">
+                    <h2>Approved</h2>
+                    <div class="card-list" data-lane-id="approved">
+                        <!-- Cards will be dynamically inserted here -->
+                    </div>
+                    <md-filled-tonal-button class="new-card-button" data-lane-id="approved">
+                        New Card
+                        <span slot="icon" class="material-icons-outlined">add</span>
+                    </md-filled-tonal-button>
+                </div>
+                
+                <!-- Swim Lane: Done -->
+                <div class="swim-lane" id="lane-done">
+                    <h2>Done</h2>
+                    <div class="card-list" data-lane-id="done">
+                        <!-- Cards will be dynamically inserted here -->
+                    </div>
+                    <md-filled-tonal-button class="new-card-button" data-lane-id="done">
+                        New Card
+                        <span slot="icon" class="material-icons-outlined">add</span>
+                    </md-filled-tonal-button>
+                </div>
+
+            </div>
+            
+            <!-- Footer -->
+            <footer>
+                <p>Created by Jonas Lund 2025</p>
+            </footer>
+        </main>
+    </div>
+
+    <!-- Card Editor Modal (Dialog) -->
+    <md-dialog id="card-modal">
+        <div slot="headline">Create / Edit Card</div>
+        <form id="card-form" slot="content" method="dialog">
+            
+            <input type="hidden" id="card-id">
+            <input type="hidden" id="card-lane-id">
+            
+            <md-text-field label="Title" id="card-title" required></md-text-field>
+            
+            <md-text-field label="Brief Description" id="card-description"></md-text-field>
+            
+            <md-filled-text-field label="Comment" type="textarea" rows="5" id="card-comment"></md-filled-text-field>
+            
+            <div class="form-row">
+                <md-text-field label="Owner (email)" type="email" id="card-owner"></md-text-field>
+                <md-text-field label="Due Date" type="date" id="card-due-date"></md-text-field>
+            </div>
+            
+            <div class="form-info">
+                <span id="card-created-date"></span>
+                <span id="card-reminder-date"></span>
+            </div>
+
+        </form>
+        <div slot="actions">
+            <md-text-button id="delete-button">Delete</md-text-button>
+            <md-text-button form="card-form" value="cancel">Cancel</md-text-button>
+            <md-filled-button form="card-form" value="save">Save</md-filled-button>
+        </div>
+    </md-dialog>
+    
+    <!-- Reminders Modal (Dialog) -->
+    <md-dialog id="reminders-modal">
+        <div slot="headline">Upcoming Reminders</div>
+        <div slot="content" id="reminders-list">
+            <!-- Reminder list will be dynamically inserted here -->
+        </div>
+        <div slot="actions">
+            <md-text-button value="ok" autofocus>OK</md-text-button>
+        </div>
+    </md-dialog>
+
+    <!-- Snackbar for notifications -->
+    <md-snackbar id="snackbar" label-text="Message"></md-snackbar>
+
+    <script type="module">
+        // Wait for Material Web Components to be defined and ready
+        // We don't need DOMContentLoaded because the script is at the end of the body.
+        customElements.whenDefined('md-filled-button').then(() => {
+            
+            // --- STATE ---
+            let boardState = {
+                    cards: [
+                        // Example card for demonstration
+                        {
+                            id: 'card-1',
+                            laneId: 'idea',
+                            title: 'Implement Kanban Board',
+                            description: 'Build the basic UI',
+                            comment: 'Need to use Material Web Components.',
+                            createdDate: new Date().toISOString(),
+                            dueDate: '2025-10-30',
+                            owner: 'jonas@example.com'
+                        },
+                        {
+                            id: 'card-2',
+                            laneId: 'todo',
+                            title: 'Add Drag and Drop',
+                            description: 'Allow moving cards',
+                            comment: '',
+                            createdDate: new Date().toISOString(),
+                            dueDate: '2025-10-28',
+                            owner: 'test@example.com'
+                        },
+                        {
+                            id: 'card-3',
+                            laneId: 'ongoing',
+                            title: 'Implement Save/Load',
+                            description: 'Use local file system',
+                            comment: 'File extension should be .VBoard',
+                            createdDate: new Date().toISOString(),
+                            dueDate: '2025-10-25',
+                            owner: 'dev@example.com'
+                        }
+                    ],
+                    lanes: ['idea', 'todo', 'ongoing', 'approved', 'done']
+                };
+                
+                let currentlyDraggingCardId = null;
+
+                // --- DOM ELEMENTS ---
+                const board = document.getElementById('board');
+                const cardModal = document.getElementById('card-modal');
+                const cardForm = document.getElementById('card-form');
+                const deleteButton = document.getElementById('delete-button');
+                const snackbar = document.getElementById('snackbar');
+                
+                // Sidebar elements
+                const themeToggle = document.getElementById('theme-toggle');
+                const saveButton = document.getElementById('save-button');
+                const loadButton = document.getElementById('load-button');
+                const fileLoader = document.getElementById('file-loader');
+                const fileSaver = document.getElementById('file-saver');
+                const reminderDaysInput = document.getElementById('reminder-days');
+                const sendRemindersButton = document.getElementById('send-reminders-button');
+                const remindersModal = document.getElementById('reminders-modal');
+                const remindersList = document.getElementById('reminders-list');
+
+                // --- FUNCTIONS ---
+                
+                /**
+                 * Generates a simple UUID
+                 */
+                function generateUUID() {
+                    return 'card-' + Math.random().toString(36).substring(2, 15);
+                }
+                
+                /**
+                 * Shows a snackbar notification
+                 * @param {string} message - The message to display
+                 */
+                function showSnackbar(message) {
+                    snackbar.labelText = message;
+                    snackbar.open = true; // Use the 'open' property instead of show()
+                }
+
+                /**
+                 * Creates a DOM element for a card
+                 * @param {object} card - The card object from boardState
+                 * @returns {HTMLElement} - The card element
+                 */
+                function createCardElement(card) {
+                    const cardEl = document.createElement('div');
+                    cardEl.className = 'kanban-card'; // Add class for styling
+                    cardEl.draggable = true; // Make it draggable
+                    cardEl.dataset.cardId = card.id;
+                    
+                    const today = new Date().setHours(0,0,0,0);
+                    const dueDate = card.dueDate ? new Date(card.dueDate) : null;
+                    let dueDateClass = '';
+                    let dueDateStr = card.dueDate ? new Date(card.dueDate).toLocaleDateString() : 'No due date';
+
+                    if (dueDate && dueDate.setHours(0,0,0,0) < today && card.laneId !== 'done') {
+                        dueDateClass = 'overdue';
+                        dueDateStr += ' (Overdue)';
+                    }
+
+                    // Set the card's content
+                    cardEl.innerHTML = `
+                    <h3>${card.title}</h3>
+                        <p>${card.description}</p>
+                        <div class="card-footer">
+                            <span class="owner">${card.owner || 'Unassigned'}</span>
+                            <span class="due-date ${dueDateClass}">${dueDateStr}</span>
+                        </div>
+                    `;
+                
+                // Add event listeners for drag-and-drop
+                cardEl.addEventListener('dragstart', (e) => {
+                    e.dataTransfer.setData('text/plain', card.id);
+                    currentlyDraggingCardId = card.id;
+                    // Add class after a tiny delay for browser to register drag
+                    setTimeout(() => cardEl.classList.add('dragging'), 0);
+                }); // <-- I've removed the confusing comment that was here.
+            
+            cardEl.addEventListener('dragend', () => {
+                cardEl.classList.remove('dragging');
+                    currentlyDraggingCardId = null;
+                });
+                
+                // Add listener for editing
+                cardEl.addEventListener('dblclick', () => openEditModal(card));
+                
+                return cardEl;
+            }
+
+            /**
+             * Renders the entire board based on the current boardState
+             */
+            function renderBoard() {
+                // Clear all lanes
+                document.querySelectorAll('.card-list').forEach(lane => {
+                    lane.innerHTML = '';
+                });
+                
+                // Add cards to their respective lanes
+                boardState.cards.forEach(card => {
+                    const laneEl = document.querySelector(`.card-list[data-lane-id="${card.laneId}"]`);
+                    if (laneEl) {
+                        const cardEl = createCardElement(card);
+                        laneEl.appendChild(cardEl);
+                    }
+                });
+            }
+
+            /**
+             * Opens the modal to create or edit a card
+             * @param {object | null} card - The card to edit, or null to create a new one
+             * @param {string | null} defaultLaneId - The lane to add a new card to
+             */
+            function openEditModal(card = null, defaultLaneId = null) {
+                cardForm.reset();
+                const titleEl = document.getElementById('card-title');
+                
+                if (card) {
+                    // Editing existing card
+                    cardModal.querySelector('[slot="headline"]').textContent = 'Edit Card';
+                    document.getElementById('card-id').value = card.id;
+                    document.getElementById('card-lane-id').value = card.laneId;
+                    titleEl.value = card.title;
+                    document.getElementById('card-description').value = card.description;
+                    document.getElementById('card-comment').value = card.comment;
+                    document.getElementById('card-owner').value = card.owner;
+                    document.getElementById('card-due-date').value = card.dueDate;
+                    
+                    const created = new Date(card.createdDate).toLocaleString();
+                    document.getElementById('card-created-date').textContent = `Created: ${created}`;
+                    
+                    deleteButton.style.display = 'block';
+                } else {
+                    // Creating new card
+                    cardModal.querySelector('[slot="headline"]').textContent = 'Create New Card';
+                    document.getElementById('card-id').value = '';
+                    document.getElementById('card-lane-id').value = defaultLaneId || 'idea'; // Default to 'idea'
+                    document.getElementById('card-created-date').textContent = '';
+                    deleteButton.style.display = 'none';
+                }
+                
+                // Update reminder date info
+                updateReminderInfo(document.getElementById('card-due-date').value);
+                
+                cardModal.open = true; // Use the 'open' property instead of show()
+                // Focus the title field
+                setTimeout(() => titleEl.focus(), 100);
+            }
+            
+            /**
+             * Updates the reminder date info text in the modal
+             * @param {string} dueDateString - The due date from the input (YYYY-MM-DD)
+             */
+            function updateReminderInfo(dueDateString) {
+                const reminderInfoEl = document.getElementById('card-reminder-date');
+                const daysBefore = parseInt(reminderDaysInput.value);
+                if (dueDateString && !isNaN(daysBefore)) {
+                    const dueDate = new Date(dueDateString);
+                    dueDate.setDate(dueDate.getDate() - daysBefore);
+                    reminderInfoEl.textContent = `Reminder will be sent on: ${dueDate.toLocaleDateString()}`;
+                } else {
+                    reminderInfoEl.textContent = 'Set a due date to see reminder date.';
+                }
+            }
+            
+            /**
+             * Saves the card data from the modal to the boardState
+             */
+            function saveCardFromModal() {
+                const cardId = document.getElementById('card-id').value;
+                const cardData = {
+                    id: cardId || generateUUID(),
+                    laneId: document.getElementById('card-lane-id').value,
+                    title: document.getElementById('card-title').value,
+                    description: document.getElementById('card-description').value,
+                    comment: document.getElementById('card-comment').value,
+                    owner: document.getElementById('card-owner').value,
+                    dueDate: document.getElementById('card-due-date').value,
+                };
+
+                if (cardId) {
+                    // Update existing card
+                    const index = boardState.cards.findIndex(c => c.id === cardId);
+                    if (index > -1) {
+                        // Preserve createdDate
+                        cardData.createdDate = boardState.cards[index].createdDate;
+                        boardState.cards[index] = cardData;
+                    }
+                    showSnackbar('Card updated!');
+                } else {
+                    // Create new card
+                    cardData.createdDate = new Date().toISOString();
+                    boardState.cards.push(cardData);
+                    showSnackbar('Card created!');
+                }
+                
+                renderBoard();
+            }
+            
+            /**
+             * Deletes the card currently being edited in the modal
+             */
+            function deleteCardFromModal() {
+                const cardId = document.getElementById('card-id').value;
+                if (cardId) {
+                    boardState.cards = boardState.cards.filter(c => c.id !== cardId);
+                    renderBoard();
+                    cardModal.close(); // Manually close modal after deletion
+                    showSnackbar('Card deleted.');
+                }
+            }
+            
+            /**
+             * Saves the entire boardState to a local .VBoard file
+             */
+            function saveBoard() {
+                try {
+                    const data = JSON.stringify(boardState, null, 2); // Pretty-print JSON
+                    const blob = new Blob([data], { type: 'application/json' });
+                    const url = URL.createObjectURL(blob);
+                    
+                    fileSaver.href = url;
+                    const timestamp = new Date().toISOString().slice(0, 10);
+                    fileSaver.download = `VeryBoard_${timestamp}.VBoard`;
+                    fileSaver.click();
+                    
+                    URL.revokeObjectURL(url); // Clean up
+                    showSnackbar('Board saved successfully!');
+                } catch (error) {
+                    console.error('Error saving board:', error);
+                    showSnackbar('Error: Could not save board.');
+                }
+            }
+            
+            /**
+             * Loads a .VBoard file from the user's computer
+             * @param {Event} event - The file input change event
+             */
+            function loadBoard(event) {
+                const file = event.target.files[0];
+                if (!file) return;
+                
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const loadedState = JSON.parse(e.target.result);
+                        // Basic validation
+                        if (loadedState && loadedState.cards && loadedState.lanes) {
+                            boardState = loadedState;
+                            renderBoard();
+                            showSnackbar('Board loaded successfully!');
+                        } else {
+                            throw new Error('Invalid file format.');
+                        }
+                    } catch (error) {
+                        console.error('Error loading board:', error);
+                        showSnackbar('Error: Could not load board. File may be corrupt.');
+                    }
+                };
+                reader.readAsText(file);
+                
+                // Reset file input to allow loading the same file again
+                event.target.value = null;
+            }
+            
+            /**
+             * Checks for cards that are due soon and shows a modal
+             */
+            function checkReminders() {
+                const daysBefore = parseInt(reminderDaysInput.value);
+                if (isNaN(daysBefore)) {
+                    showSnackbar('Please enter a valid number for reminder days.');
+                    return;
+                }
+                
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                
+                const targetDate = new Date();
+                targetDate.setDate(today.getDate() + daysBefore);
+                
+                const upcomingCards = boardState.cards.filter(card => {
+                    if (!card.dueDate || card.laneId === 'done') {
+                        return false;
+                    }
+                    const dueDate = new Date(card.dueDate);
+                    dueDate.setHours(0, 0, 0, 0); // Normalize due date
+                    
+                    // Check if due date is between today and the target reminder date (inclusive)
+                    return dueDate >= today && dueDate <= targetDate;
+                });
+                
+                if (upcomingCards.length === 0) {
+                    showSnackbar('No upcoming reminders found.');
+                    return;
+                }
+                
+                // Build list for modal
+                const listHtml = upcomingCards
+                    .sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate)) // Sort by due date
+                    .map(card => `
+                        <li>
+                            <strong>${card.title}</strong>
+                            <div>Due: ${new Date(card.dueDate).toLocaleDateString()}</div>
+                            <div>Owner: ${card.owner || 'Unassigned'}</div>
+                        </li>
+                    `).join('');
+                
+                remindersList.innerHTML = `<ul>${listHtml}</ul>`;
+                remindersModal.open = true; // Use the 'open' property instead of show()
+            }
+
+            // --- EVENT LISTENERS ---
+            
+            // Theme Toggle
+            themeToggle.addEventListener('change', (e) => {
+                document.body.classList.toggle('dark-mode', e.target.selected);
+            });
+            
+            // Save/Load Buttons
+            saveButton.addEventListener('click', saveBoard);
+            loadButton.addEventListener('click', () => fileLoader.click());
+            fileLoader.addEventListener('change', loadBoard);
+            
+            // Reminder Button
+            sendRemindersButton.addEventListener('click', checkReminders);
+            
+            // "New Card" Buttons
+            document.querySelectorAll('.new-card-button').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const laneId = e.currentTarget.dataset.laneId; // Use currentTarget
+                    openEditModal(null, laneId);
+                });
+            });
+            
+            // Card Modal
+            cardModal.addEventListener('close', (e) => {
+                // Check if the dialog was closed by the "Save" button
+                if (cardModal.returnValue === 'save') {
+                    saveCardFromModal();
+                }
+                // Always reset return value
+                cardModal.returnValue = 'cancel';
+            });
+            
+            // Modal Delete Button
+            deleteButton.addEventListener('click', deleteCardFromModal);
+            
+            // Update reminder info when due date or reminder days change
+            // Use 'input' for md-text-field for better responsiveness
+            document.getElementById('card-due-date').addEventListener('input', (e) => updateReminderInfo(e.target.value));
+            reminderDaysInput.addEventListener('input', () => {
+                if(cardModal.open) {
+                    updateReminderInfo(document.getElementById('card-due-date').value);
+                }
+            });
+            
+            // Drag-and-Drop Listeners for Swim Lanes
+            document.querySelectorAll('.card-list').forEach(lane => {
+                lane.addEventListener('dragover', (e) => {
+                    e.preventDefault(); // Allow drop
+                    lane.classList.add('drag-over');
+                });
+                
+                lane.addEventListener('dragleave', () => {
+                    lane.classList.remove('drag-over');
+                });
+                
+                lane.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    lane.classList.remove('drag-over');
+                    
+                    const cardId = e.dataTransfer.getData('text/plain');
+                    // Ensure we're not dropping on a card, but on the list
+                    const targetLane = e.target.closest('.card-list'); 
+                    
+                    if (cardId && targetLane) {
+                        const newLaneId = targetLane.dataset.laneId;
+                        const card = boardState.cards.find(c => c.id === cardId);
+                        
+                        if (card && card.laneId !== newLaneId) {
+                            card.laneId = newLaneId;
+                            renderBoard(); // Re-render state
+                        }
+                    }
+                });
+            });
+
+            // --- INITIALIZATION ---
+            renderBoard();
+            showSnackbar('Welcome to VeryBoard!');
+
+        }); // End of customElements.whenDefined
+    </script>
+</body>
+</html>
+
