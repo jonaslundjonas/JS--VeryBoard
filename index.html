@@ -6,7 +6,19 @@
     <title>VeryBoard</title>
     
     <!-- Load Material Design 3 Web Components -->
-    <script type="module" src="https://cdn.jsdelivr.net/npm/material-web@1.4.1/dist/material-web.js"></script>
+    <script type="importmap">
+    {
+      "imports": {
+        "@material/web/": "https://esm.run/@material/web/"
+      }
+    }
+    </script>
+    <script type="module">
+      import '@material/web/all.js';
+      import {styles as typescaleStyles} from '@material/web/typography/md-typescale-styles.js';
+
+      document.adoptedStyleSheets.push(typescaleStyles.styleSheet);
+    </script>
     
     <!-- Load Fonts: Roboto (standard) and Material Icons (for icons) -->
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
@@ -520,15 +532,15 @@
             <input type="hidden" id="card-id">
             <input type="hidden" id="card-lane-id">
             
-            <md-text-field label="Title" id="card-title" required></md-text-field>
-            
-            <md-text-field label="Brief Description" id="card-description"></md-text-field>
-            
-            <md-filled-text-field label="Comment" type="textarea" rows="5" id="card-comment"></md-filled-text-field>
-            
+            <md-outlined-text-field label="Title" id="card-title" required></md-outlined-text-field>
+
+            <md-outlined-text-field label="Brief Description" id="card-description"></md-outlined-text-field>
+
+            <md-outlined-text-field label="Comment" type="textarea" rows="5" id="card-comment"></md-outlined-text-field>
+
             <div class="form-row">
-                <md-text-field label="Owner (email)" type="email" id="card-owner"></md-text-field>
-                <md-text-field label="Due Date" type="date" id="card-due-date"></md-text-field>
+                <md-outlined-text-field label="Owner (email)" type="email" id="card-owner"></md-outlined-text-field>
+                <md-outlined-text-field label="Due Date" type="date" id="card-due-date"></md-outlined-text-field>
             </div>
             
             <div class="form-info">
