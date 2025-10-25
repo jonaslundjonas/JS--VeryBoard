@@ -6,9 +6,12 @@ test.describe('VeryBoard App', () => {
   test.beforeAll(async () => {
     // This is a workaround to make this test work in the cloud environment
     // We need to kill the previous server if it exists
-    const http = require('http');
-    const kill = require('kill-port');
-    await kill(8000, 'tcp');
+    try {
+      const kill = require('kill-port');
+      await kill(8000, 'tcp');
+    } catch (e) {
+      // Ignore errors if port is not in use
+    }
   });
 
   test.beforeEach(async ({ page }) => {
