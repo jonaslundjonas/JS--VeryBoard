@@ -235,6 +235,10 @@
             border-radius: 0 0 12px 12px;
             transition: background-color: 0.2s ease;
         }
+
+        #lane-done .card-list {
+            height: 50%;
+        }
         
         .card-list.drag-over {
             /* Highlight lane when dragging over */
@@ -573,6 +577,14 @@
                         New Card
                         <span slot="icon" class="material-icons-outlined">add</span>
                     </md-filled-tonal-button>
+                    <h2>Rejected</h2>
+                    <div class="card-list" data-lane-id="rejected">
+                        <!-- Cards will be dynamically inserted here -->
+                    </div>
+                    <md-filled-tonal-button class="new-card-button" data-lane-id="rejected">
+                        New Card
+                        <span slot="icon" class="material-icons-outlined">add</span>
+                    </md-filled-tonal-button>
                 </div>
 
             </div>
@@ -741,7 +753,7 @@
                             linkedCards: []
                         }
                     ],
-                    lanes: ['idea', 'todo', 'ongoing', 'approved', 'done']
+                    lanes: ['idea', 'todo', 'ongoing', 'approved', 'done', 'rejected']
                 };
                 
                 let currentlyDraggingCardId = null;
