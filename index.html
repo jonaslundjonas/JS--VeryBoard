@@ -368,7 +368,6 @@
          /* Custom style for the delete button */
          #delete-button {
              --md-text-button-label-text-color: var(--md-sys-color-error);
-             margin-right: auto; /* Pushes to the far left */
          }
          
          #reminders-modal ul {
@@ -640,7 +639,10 @@
 
             <div class="form-row">
                 <md-outlined-text-field label="Owner (email)" type="email" id="card-owner"></md-outlined-text-field>
-                <md-outlined-text-field type="text" id="card-due-date" label="Due Date"></md-outlined-text-field>
+                <div class="select-container">
+                    <label for="card-due-date">Due Date</label>
+                    <md-outlined-text-field type="text" id="card-due-date"></md-outlined-text-field>
+                </div>
             </div>
             <div class="form-row">
                 <md-outlined-text-field label="Days before due" type="number" value="3" min="0" id="card-reminder-days"></md-outlined-text-field>
