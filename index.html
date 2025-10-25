@@ -658,6 +658,7 @@
         </form>
         <div slot="actions">
             <md-text-button id="delete-button">Delete</md-text-button>
+            <md-outlined-button id="send-single-reminder-button">Send Reminder</md-outlined-button>
             <md-outlined-button id="save-card-button">Save Card</md-outlined-button>
             <md-text-button form="card-form" value="cancel">Cancel</md-text-button>
             <md-filled-button form="card-form" value="save">Save to Board</md-filled-button>
@@ -1215,54 +1216,54 @@
                     return;
                 }
                 
-                // Group cards by owner
-                const remindersByOwner = upcomingCards.reduce((acc, card) => {
-                    const owner = card.owner || 'Unassigned';
-                    if (!acc[owner]) {
-                        acc[owner] = [];
-                    }
-                    acc[owner].push(card);
-                    return acc;
-                }, {});
+                remindersList.innerHTML = ''; // Clear previous list
+                const list = document.createElement('ul');
+                upcomingCards.forEach(card => {
+                    const listItem = document.createElement('li');
+                    listItem.innerHTML = `
+                        <strong>${card.title}</strong> (Owner: ${card.owner || 'Unassigned'})
+                        <br>
+                        <small>Due: ${new Date(card.dueDate).toLocaleDateString()}</small>
+                    `;
+                    listItem.style.cursor = 'pointer';
+                    listItem.addEventListener('click', () => {
+                        remindersModal.close();
+                        openEditModal(card);
+                    });
+                    list.appendChild(listItem);
+                });
 
-                triggerEmailClient(remindersByOwner);
+                remindersList.appendChild(list);
+                remindersModal.open = true;
             }
 
             /**
-             * Triggers the user's default email client with a pre-filled email
-             * @param {object} remindersByOwner - An object with owners as keys and arrays of cards as values
+             * Triggers the user's default email client for a single card reminder.
+             * @param {object} card - The card object to send a reminder for.
              */
-            function triggerEmailClient(remindersByOwner) {
+            function triggerEmailClientForCard(card) {
                 // If in test mode, don't trigger the email client
                 if (document.body.dataset.testMode === 'true') {
-                    console.log('Test mode: triggerEmailClient mocked. Reminders:', remindersByOwner);
+                    console.log('Test mode: triggerEmailClientForCard mocked. Card:', card);
                     window.emailClientTriggered = true;
                     return;
                 }
 
-                const owners = Object.keys(remindersByOwner).filter(owner => owner !== 'Unassigned');
-                if (owners.length === 0) {
-                    showSnackbar('No reminders to send for assigned owners.');
+                if (!card.owner || card.owner === 'Unassigned') {
+                    showSnackbar('Cannot send reminder: Card has no owner.');
                     return;
                 }
 
-                const subject = 'Upcoming Task Reminders from VeryBoard';
-                let body = 'Hello,\n\nHere are your upcoming task reminders:\n\n';
+                const subject = `Reminder: Task "${card.title}" is due soon`;
+                let body = `Hello,\n\nThis is a reminder for the following task:\n\n`;
+                body += `  - Task: ${card.title}\n`;
+                body += `    Description: ${card.description}\n`;
+                body += `    Due Date: ${new Date(card.dueDate).toLocaleDateString()}\n\n`;
+                body += `Thank you,\nVeryBoard`;
 
-                for (const owner in remindersByOwner) {
-                    if (owner !== 'Unassigned') {
-                        body += `--- For ${owner} ---\n`;
-                        remindersByOwner[owner].forEach(card => {
-                            body += `  - Task: ${card.title}\n`;
-                            body += `    Description: ${card.description}\n`;
-                            body += `    Due Date: ${new Date(card.dueDate).toLocaleDateString()}\n\n`;
-                        });
-                    }
-                }
+                const mailtoLink = `mailto:${card.owner}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 
-                const mailtoLink = `mailto:?bcc=${owners.join(',')}&subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-                
-                showSnackbar('Opening your email client to send reminders...');
+                showSnackbar('Opening your email client to send reminder...');
                 window.location.href = mailtoLink;
             }
 
@@ -1311,6 +1312,18 @@
             // Modal Delete Button
             deleteButton.addEventListener('click', deleteCardFromModal);
             document.getElementById('save-card-button').addEventListener('click', saveCard);
+
+            document.getElementById('send-single-reminder-button').addEventListener('click', () => {
+                const cardId = document.getElementById('card-id').value;
+                if (cardId) {
+                    const card = boardState.cards.find(c => c.id === cardId);
+                    if (card) {
+                        triggerEmailClientForCard(card);
+                    }
+                } else {
+                    showSnackbar('Save the card before sending a reminder.');
+                }
+            });
             
             // The built-in form submission for md-dialog seems to be unreliable in this setup.
             // We will manually handle the save and close action with a direct click listener.
