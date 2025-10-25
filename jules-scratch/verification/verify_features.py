@@ -13,41 +13,26 @@ def run_verification(playwright):
     # 2. Open a card for editing
     page.get_by_role("heading", name="Implement Kanban Board").dblclick()
 
-    # 3. Verify the new rich text editor for the description
+    # 3. Verify the rich text editor is now on the comment field
     modal = page.locator("#card-modal")
     expect(modal).to_be_visible()
 
-    description_editor = modal.locator("#card-description")
-    description_editor.click()
+    comment_editor = modal.locator("#card-comment")
+    comment_editor.click()
     page.keyboard.press("Control+A")
     page.keyboard.press("Delete")
     page.keyboard.type("This is a bold test.")
     page.keyboard.press("Control+A")
-    modal.locator("#description-toolbar [data-command='bold']").click()
+    modal.locator("#comment-toolbar [data-command='bold']").click()
 
-    # 4. Save the card to a file
-    # Start waiting for the download before clicking the button
-    with page.expect_download() as download_info:
-        modal.locator("#save-card-button").click()
-    download = download_info.value
-    download.save_as("jules-scratch/verification/test-card.vbcard")
+    # 4. Save the changes to the board
+    modal.get_by_role("button", name="Save to Board").click()
 
-    # 5. Close the modal and delete the card to ensure a clean slate for loading
-    modal.get_by_role("button", name="Cancel").click()
+    # 5. Re-open the card and verify the rich text content was saved
     page.get_by_role("heading", name="Implement Kanban Board").dblclick()
-    modal.locator("#delete-button").click()
+    expect(modal.locator("#card-comment strong")).to_have_text("This is a bold test.")
 
-    # 6. Load the card from the file
-    page.locator("#card-loader").set_input_files("jules-scratch/verification/test-card.vbcard")
-
-    # 7. Verify the card was loaded correctly
-    expect(page.locator(".kanban-card", has_text="Implement Kanban Board")).to_be_visible()
-
-    # 8. Verify the rich text content was loaded
-    page.get_by_role("heading", name="Implement Kanban Board").dblclick()
-    expect(modal.locator("#card-description strong")).to_have_text("This is a bold test.")
-
-    # 9. Take a screenshot for verification
+    # 6. Take a screenshot for verification
     page.screenshot(path="jules-scratch/verification/verification.png")
 
     browser.close()

@@ -358,32 +358,14 @@
              color: var(--md-sys-color-primary);
          }
 
-        /* * FOOTER
-         */
-        footer {
-            text-align: center;
-            padding: 12px;
-            font-size: 0.75rem;
-            color: var(--md-sys-color-on-surface-variant);
-            background-color: var(--md-sys-color-surface-container-low);
-            border-top: 1px solid var(--md-sys-color-outline-variant);
-        }
-        
-        /* Hidden file inputs */
-        .hidden-file-input {
-            display: none;
-        }
-
-        /* * RESPONSIVENESS
-         */
-        #description-toolbar {
+        #comment-toolbar {
             display: flex;
             gap: 8px;
             margin-bottom: 8px;
             align-items: center;
         }
 
-        #description-toolbar button, #description-toolbar select {
+        #comment-toolbar button, #comment-toolbar select {
             border: 1px solid var(--md-sys-color-outline-variant);
             background-color: var(--md-sys-color-surface-container-low);
             color: var(--md-sys-color-on-surface-variant);
@@ -396,6 +378,24 @@
             font-weight: 900;
         }
 
+        /* * FOOTER
+         */
+        footer {
+            text-align: center;
+            padding: 12px;
+            font-size: 0.75rem;
+            color: var(--md-sys-color-on-surface-variant);
+            background-color: var(--md-sys-color-surface-container-low);
+            border-top: 1px solid var(--md-sys-color-outline-variant);
+        }
+
+        /* Hidden file inputs */
+        .hidden-file-input {
+            display: none;
+        }
+
+        /* * RESPONSIVENESS
+         */
         @media (max-width: 768px) {
             .app-container {
                 /* Stack sidebar and main content vertically */
@@ -556,8 +556,10 @@
             
             <md-outlined-text-field label="Title" id="card-title" required></md-outlined-text-field>
 
-            <label for="card-description-editor">Brief Description</label>
-            <div id="description-toolbar">
+            <md-outlined-text-field label="Brief Description" id="card-description"></md-outlined-text-field>
+
+            <label for="card-comment">Comment</label>
+            <div id="comment-toolbar">
                 <button type="button" data-command="bold"><b>B</b></button>
                 <button type="button" data-command="italic"><i>I</i></button>
                 <button type="button" data-command="insertUnorderedList">●</button>
@@ -573,16 +575,10 @@
                     <option value="5">Large</option>
                     <option value="7">Huge</option>
                 </select>
+                <button type="button" data-command="createLink">Link</button>
             </div>
-            <div id="card-description" contenteditable="true" style="border: 1px solid #ccc; padding: 10px; min-height: 150px; white-space: pre-wrap;"></div>
-
-            <label for="card-comment">Comment</label>
-            <div id="comment-toolbar">
-                <button type="button" id="bold-button">B</button>
-                <button type="button" id="italic-button">I</button>
-                <button type="button" id="link-button">Link</button>
-            </div>
-            <div id="card-comment" contenteditable="true" style="border: 1px solid #ccc; padding: 5px; min-height: 100px;"></div>
+            <div id="card-comment" contenteditable="true" style="border: 1px solid #ccc; padding: 10px; min-height: 150px; white-space: pre-wrap;"></div>
+            <textarea id="card-comment-hidden" style="display:none;"></textarea>
 
             <div class="form-row">
                 <md-outlined-text-field label="Owner (email)" type="email" id="card-owner"></md-outlined-text-field>
@@ -799,8 +795,9 @@
                     document.getElementById('card-id').value = card.id;
                     document.getElementById('card-lane-id').value = card.laneId;
                     titleEl.value = card.title;
-                    document.getElementById('card-description').innerHTML = card.description;
+                    document.getElementById('card-description').value = card.description;
                     document.getElementById('card-comment').innerHTML = card.comment;
+                    document.getElementById('card-comment-hidden').value = card.comment;
                     document.getElementById('card-owner').value = card.owner;
                     document.getElementById('card-due-date').value = card.dueDate;
                     document.getElementById('card-reminder-days').value = card.reminderDays || 3;
@@ -816,7 +813,7 @@
                     cardModal.querySelector('[slot="headline"]').textContent = 'Create New Card';
                     document.getElementById('card-id').value = '';
                     document.getElementById('card-lane-id').value = defaultLaneId || 'idea'; // Default to 'idea'
-                    document.getElementById('card-description').innerHTML = '';
+                    document.getElementById('card-description').value = '';
                     document.getElementById('card-comment').innerHTML = '';
                     document.getElementById('card-reminder-days').value = 3;
                     document.getElementById('card-created-date').textContent = '';
@@ -856,8 +853,8 @@
                     id: cardId || generateUUID(),
                     laneId: document.getElementById('card-lane-id').value,
                     title: document.getElementById('card-title').value,
-                    description: document.getElementById('card-description').innerHTML,
-                    comment: document.getElementById('card-comment').innerHTML,
+                    description: document.getElementById('card-description').value,
+                    comment: document.getElementById('card-comment-hidden').value,
                     owner: document.getElementById('card-owner').value,
                     dueDate: document.getElementById('card-due-date').value,
                     reminderDays: parseInt(document.getElementById('card-reminder-days').value) || 0,
@@ -904,7 +901,7 @@
                 const cardData = {
                     title: document.getElementById('card-title').value,
                     description: document.getElementById('card-description').value,
-                    comment: document.getElementById('card-comment').innerHTML,
+                    comment: document.getElementById('card-comment-hidden').value,
                     owner: document.getElementById('card-owner').value,
                     dueDate: document.getElementById('card-due-date').value,
                     reminderDays: parseInt(document.getElementById('card-reminder-days').value) || 0,
@@ -1139,35 +1136,59 @@
             deleteButton.addEventListener('click', deleteCardFromModal);
             document.getElementById('save-card-button').addEventListener('click', saveCard);
             
+            // The built-in form submission for md-dialog seems to be unreliable in this setup.
+            // We will manually handle the save and close action with a direct click listener.
+            document.querySelector('md-filled-button[form="card-form"][value="save"]').addEventListener('click', (e) => {
+                e.preventDefault(); // Stop the default form submission
+                saveCardFromModal();
+                cardModal.close(); // Manually close the dialog
+            });
+
             // Update reminder info when due date or reminder days change
             document.getElementById('card-due-date').addEventListener('input', (e) => updateReminderInfo(e.target.value, document.getElementById('card-reminder-days').value));
             document.getElementById('card-reminder-days').addEventListener('input', (e) => updateReminderInfo(document.getElementById('card-due-date').value, e.target.value));
 
-            // Description Rich Text Editor Toolbar
-            document.getElementById('description-toolbar').addEventListener('click', (e) => {
-                const target = e.target;
-                if (target.tagName === 'BUTTON' || target.tagName === 'SELECT') {
-                    const command = target.dataset.command;
-                    const value = target.value || null;
-                    document.execCommand(command, false, value);
-                    document.getElementById('card-description').focus();
-                }
-            });
-
             // Comment Rich Text Editor Toolbar
-            document.getElementById('bold-button').addEventListener('click', () => {
-                document.execCommand('bold');
+            document.getElementById('card-comment').addEventListener('input', () => {
+                document.getElementById('card-comment-hidden').value = document.getElementById('card-comment').innerHTML;
             });
 
-            document.getElementById('italic-button').addEventListener('click', () => {
-                document.execCommand('italic');
+            // --- Rich Text Editor Logic ---
+            const toolbar = document.getElementById('comment-toolbar');
+            const commentEditor = document.getElementById('card-comment');
+            const hiddenComment = document.getElementById('card-comment-hidden');
+
+            function applyFormat(command, value = null) {
+                // We don't need to focus the editor here, as the mousedown prevention
+                // should keep the focus and selection intact.
+                document.execCommand(command, false, value);
+                // Manually sync the hidden input after applying the format
+                hiddenComment.value = commentEditor.innerHTML;
+            }
+
+            // For buttons, we use 'mousedown' to prevent them from stealing focus
+            // from the contenteditable div, which would deselect the text.
+            toolbar.querySelectorAll('button').forEach(button => {
+                button.addEventListener('mousedown', e => {
+                    e.preventDefault(); // This is the key to prevent focus shift
+
+                    const command = button.dataset.command;
+                    if (command === 'createLink') {
+                        const url = prompt('Enter a URL:');
+                        if (url) applyFormat(command, url);
+                    } else {
+                        applyFormat(command);
+                    }
+                });
             });
 
-            document.getElementById('link-button').addEventListener('click', () => {
-                const url = prompt('Enter a URL:');
-                if (url) {
-                    document.execCommand('createLink', false, url);
-                }
+            // For select elements, 'change' is the appropriate event to get the new value.
+            // They don't have the same focus-stealing issue as buttons.
+            toolbar.querySelectorAll('select').forEach(select => {
+                select.addEventListener('change', e => {
+                    const command = select.dataset.command;
+                    applyFormat(command, select.value);
+                });
             });
 
             // Drag-and-Drop Listeners for Swim Lanes
