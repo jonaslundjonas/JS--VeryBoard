@@ -382,6 +382,11 @@
             font-weight: 900;
         }
 
+        /* Ensure flatpickr calendar is on top of the modal */
+        .flatpickr-calendar {
+            z-index: 10000;
+        }
+
         /* * FOOTER
          */
         footer {
@@ -725,18 +730,6 @@
                     cardEl.draggable = true; // Make it draggable
                     cardEl.dataset.cardId = card.id;
                     cardEl.style.backgroundColor = card.color || '#FFFFFF';
-
-                    // Helper function to apply text color to the element and its children
-                    const applyTextColor = (element, color) => {
-                        element.style.color = color;
-                        for (const child of element.children) {
-                            applyTextColor(child, color);
-                        }
-                    };
-
-                    if (card.textColor) {
-                        applyTextColor(cardEl, card.textColor);
-                    }
                     
                     const today = new Date().setHours(0,0,0,0);
                     const dueDate = card.dueDate ? new Date(card.dueDate) : null;
@@ -758,6 +751,17 @@
                         </div>
                     `;
                 
+                // Manually set the text color on specific elements to override styles
+                if (card.textColor) {
+                    cardEl.style.color = card.textColor;
+                    const h3 = cardEl.querySelector('h3');
+                    const p = cardEl.querySelector('p');
+                    const footerSpans = cardEl.querySelectorAll('.card-footer span');
+                    if (h3) h3.style.color = card.textColor;
+                    if (p) p.style.color = card.textColor;
+                    footerSpans.forEach(span => span.style.color = card.textColor);
+                }
+
                 // Add event listeners for drag-and-drop
                 cardEl.addEventListener('dragstart', (e) => {
                     e.dataTransfer.setData('text/plain', card.id);
@@ -845,6 +849,7 @@
                     dateFormat: "Y-m-d",
                     altInput: true,
                     altFormat: "F j, Y",
+                    static: true, // Render the calendar next to the input, not at the end of the body
                 });
 
                 cardModal.open = true; // Use the 'open' property instead of show()
