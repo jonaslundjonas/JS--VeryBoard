@@ -117,7 +117,7 @@
             font-family: 'Roboto', sans-serif;
             background-color: var(--md-sys-color-background);
             color: var(--md-sys-color-on-background);
-            transition: background-color 0.3s ease, color 0.3s ease;
+            transition: background-color 0.2s ease, color 0.3s ease;
         }
 
         .app-container {
@@ -640,7 +640,7 @@
 
             <div class="form-row">
                 <md-outlined-text-field label="Owner (email)" type="email" id="card-owner"></md-outlined-text-field>
-                <md-outlined-text-field label="Due Date" type="text" id="card-due-date"></md-outlined-text-field>
+                <md-outlined-text-field type="text" id="card-due-date" label="Due Date"></md-outlined-text-field>
             </div>
             <div class="form-row">
                 <md-outlined-text-field label="Days before due" type="number" value="3" min="0" id="card-reminder-days"></md-outlined-text-field>
@@ -657,7 +657,7 @@
 
         </form>
         <div slot="actions">
-            <md-text-button id="delete-button">Delete</md-text-button>
+            <md-text-button id="delete-button" title="Delete Card"><span class="material-icons-outlined">delete</span></md-text-button>
             <md-outlined-button id="send-single-reminder-button">Send Reminder</md-outlined-button>
             <md-outlined-button id="save-card-button">Save Card</md-outlined-button>
             <md-text-button form="card-form" value="cancel">Cancel</md-text-button>
