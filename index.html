@@ -644,8 +644,9 @@
             <div class="form-row">
                 <md-outlined-text-field label="Owner (email)" type="email" id="card-owner"></md-outlined-text-field>
                 <div class="select-container">
-                    <label for="card-due-date">Due Date</label>
-                    <md-outlined-text-field type="text" id="card-due-date"></md-outlined-text-field>
+                    <label for="card-due-date-display">Due Date</label>
+                    <md-outlined-text-field type="text" id="card-due-date-display" readonly style="cursor: pointer;"></md-outlined-text-field>
+                    <input type="hidden" id="card-due-date">
                 </div>
             </div>
             <div class="form-row">
@@ -897,6 +898,7 @@
                     document.getElementById('card-comment-hidden').value = card.comment;
                     document.getElementById('card-owner').value = card.owner;
                     document.getElementById('card-due-date').value = card.dueDate;
+                    document.getElementById('card-due-date-display').value = card.dueDate ? new Date(card.dueDate).toLocaleDateString() : '';
                     document.getElementById('card-reminder-days').value = card.reminderDays || 3;
                     document.getElementById('card-color').value = card.color || '#FFFFFF';
                     document.getElementById('card-text-color').value = card.textColor || '#000000';
@@ -922,12 +924,25 @@
                 // Update reminder date info
                 updateReminderInfo(document.getElementById('card-due-date').value, document.getElementById('card-reminder-days').value);
                 
-                // Initialize flatpickr on the due date field
+                // Initialize flatpickr on the hidden due date field
                 const dueDateEl = document.getElementById('card-due-date');
+                const dueDateDisplayEl = document.getElementById('card-due-date-display');
                 flatpickrInstance = flatpickr(dueDateEl, {
                     dateFormat: "Y-m-d",
                     altFormat: "F j, Y",
                     static: true, // Render the calendar next to the input, not at the end of the body
+                    onChange: function(selectedDates, dateStr, instance) {
+                        // When a date is selected, update the hidden input and the visible display field
+                        dueDateEl.value = dateStr;
+                        dueDateDisplayEl.value = new Date(selectedDates[0]).toLocaleDateString();
+                    }
+                });
+
+                // Open the calendar when the display field is clicked
+                dueDateDisplayEl.addEventListener('click', () => {
+                    if (flatpickrInstance) {
+                        flatpickrInstance.open();
+                    }
                 });
 
                 cardModal.open = true; // Use the 'open' property instead of show()
