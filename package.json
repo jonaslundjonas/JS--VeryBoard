@@ -20,5 +20,8 @@
   "homepage": "https://github.com/jonaslundjonas/JS--VeryBoard#readme",
   "devDependencies": {
     "@playwright/test": "^1.56.1"
+  },
+  "dependencies": {
+    "kill-port": "^2.0.1"
   }
 }

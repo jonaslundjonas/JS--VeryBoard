@@ -233,7 +233,7 @@
             gap: 8px;
             overflow-y: auto; /* Allows scrolling within a lane */
             border-radius: 0 0 12px 12px;
-            transition: background-color 0.2s ease;
+            transition: background-color: 0.2s ease;
         }
         
         .card-list.drag-over {
@@ -306,6 +306,20 @@
             font-weight: 500;
         }
 
+        .linked-cards-container {
+            margin-bottom: 8px;
+            font-size: 0.75rem;
+        }
+
+        .linked-card-badge {
+            background-color: var(--md-sys-color-secondary-container);
+            color: var(--md-sys-color-on-secondary-container);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            margin-right: 4px;
+        }
+
         /* * MODAL (DIALOG) STYLES
          */
          #card-modal md-dialog {
@@ -333,6 +347,18 @@
          .form-row > * {
              flex: 1;
          }
+
+        .select-container {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .select-container label {
+            font-size: 0.8rem;
+            color: var(--md-sys-color-on-surface-variant);
+            margin-left: 16px;
+        }
          
          .form-info {
              font-size: 0.8rem;
@@ -590,6 +616,29 @@
             <textarea id="card-comment-hidden" style="display:none;"></textarea>
 
             <div class="form-row">
+                <div class="select-container">
+                    <label for="card-category">Card Category</label>
+                    <md-outlined-select label="Category" id="card-category">
+                        <md-select-option value="Epic">
+                            <div slot="headline">Epic</div>
+                        </md-select-option>
+                        <md-select-option value="Story">
+                            <div slot="headline">Story</div>
+                        </md-select-option>
+                        <md-select-option value="Task" selected>
+                            <div slot="headline">Task</div>
+                        </md-select-option>
+                    </md-outlined-select>
+                </div>
+                <div class="select-container">
+                    <label for="linked-cards">Linked Cards</label>
+                    <md-outlined-select label="Linked Cards" id="linked-cards" multiple>
+                        <span slot="end" class="material-icons-outlined">link</span>
+                    </md-outlined-select>
+                </div>
+            </div>
+
+            <div class="form-row">
                 <md-outlined-text-field label="Owner (email)" type="email" id="card-owner"></md-outlined-text-field>
                 <md-outlined-text-field label="Due Date" type="text" id="card-due-date"></md-outlined-text-field>
             </div>
@@ -649,7 +698,9 @@
                             owner: 'jonas@example.com',
                             reminderDays: 3,
                             color: '#FFFFFF',
-                            textColor: '#000000'
+                            textColor: '#000000',
+                            category: 'Epic',
+                            linkedCards: []
                         },
                         {
                             id: 'card-2',
@@ -662,7 +713,9 @@
                             owner: 'test@example.com',
                             reminderDays: 2,
                             color: '#FFFFFF',
-                            textColor: '#000000'
+                            textColor: '#000000',
+                            category: 'Story',
+                            linkedCards: []
                         },
                         {
                             id: 'card-3',
@@ -675,7 +728,9 @@
                             owner: 'dev@example.com',
                             reminderDays: 1,
                             color: '#FFFFFF',
-                            textColor: '#000000'
+                            textColor: '#000000',
+                            category: 'Task',
+                            linkedCards: []
                         }
                     ],
                     lanes: ['idea', 'todo', 'ongoing', 'approved', 'done']
@@ -745,11 +800,26 @@
                     cardEl.innerHTML = `
                     <h3>${card.title}</h3>
                         <p>${card.description}</p>
+                        <div class="linked-cards-container"></div>
                         <div class="card-footer">
                             <span class="owner">${card.owner || 'Unassigned'}</span>
                             <span class="due-date ${dueDateClass}">${dueDateStr}</span>
                         </div>
                     `;
+
+                const linkedCardsContainer = cardEl.querySelector('.linked-cards-container');
+                const linkedCards = getLinkedCards(card.linkedCards);
+                if (linkedCards.length > 0) {
+                    const linkedLabel = document.createElement('strong');
+                    linkedLabel.textContent = 'Linked: ';
+                    linkedCardsContainer.appendChild(linkedLabel);
+                    linkedCards.forEach(linkedCard => {
+                        const span = document.createElement('span');
+                        span.textContent = linkedCard.title;
+                        span.className = 'linked-card-badge';
+                        linkedCardsContainer.appendChild(span);
+                    });
+                }
                 
                 // Manually set the text color on specific elements to override styles
                 if (card.textColor) {
@@ -823,6 +893,7 @@
                     document.getElementById('card-reminder-days').value = card.reminderDays || 3;
                     document.getElementById('card-color').value = card.color || '#FFFFFF';
                     document.getElementById('card-text-color').value = card.textColor || '#000000';
+                    document.getElementById('card-category').value = card.category || 'Task';
                     
                     const created = new Date(card.createdDate).toLocaleString();
                     document.getElementById('card-created-date').textContent = `Created: ${created}`;
@@ -836,6 +907,7 @@
                     document.getElementById('card-description').value = '';
                     document.getElementById('card-comment').innerHTML = '';
                     document.getElementById('card-reminder-days').value = 3;
+                    document.getElementById('card-category').value = 'Task';
                     document.getElementById('card-created-date').textContent = '';
                     deleteButton.style.display = 'none';
                 }
@@ -855,6 +927,71 @@
                 cardModal.open = true; // Use the 'open' property instead of show()
                 // Focus the title field
                 setTimeout(() => titleEl.focus(), 100);
+
+                // Initial population of linked cards
+                const cardId = document.getElementById('card-id').value;
+                const category = document.getElementById('card-category').value;
+                updateLinkedCardsDropdown(cardId, category);
+            }
+
+            /**
+             * Populates the linked cards dropdown based on the selected category
+             * @param {string|null} currentCardId - The ID of the card being edited, or null for a new card
+             * @param {string} category - The selected category ('Epic', 'Story', 'Task')
+             */
+            function updateLinkedCardsDropdown(currentCardId, category) {
+                const linkedCardsEl = document.getElementById('linked-cards');
+                const currentCard = boardState.cards.find(c => c.id === currentCardId);
+                const currentLinkedIds = currentCard ? currentCard.linkedCards : [];
+
+                linkedCardsEl.innerHTML = ''; // Clear existing options
+
+                let linkableCards = [];
+                if (category === 'Epic') {
+                    // Epics can link to Stories
+                    linkableCards = boardState.cards.filter(c => c.category === 'Story');
+                } else if (category === 'Story') {
+                    // Stories can link to Epics or Tasks
+                    linkableCards = boardState.cards.filter(c => c.category === 'Epic' || c.category === 'Task');
+                } else if (category === 'Task') {
+                    // Tasks can link to Stories
+                    linkableCards = boardState.cards.filter(c => c.category === 'Story');
+                }
+
+                // Filter out the current card itself
+                if (currentCardId) {
+                    linkableCards = linkableCards.filter(c => c.id !== currentCardId);
+                }
+
+                if (linkableCards.length === 0) {
+                    linkedCardsEl.disabled = true;
+                    // Add a disabled placeholder option
+                    const option = document.createElement('md-select-option');
+                    option.disabled = true;
+                    option.innerHTML = `<div slot="headline">No linkable cards</div>`;
+                    linkedCardsEl.appendChild(option);
+                } else {
+                    linkedCardsEl.disabled = false;
+                    linkableCards.forEach(c => {
+                        const option = document.createElement('md-select-option');
+                        option.value = c.id;
+                        if (currentLinkedIds.includes(c.id)) {
+                             option.selected = true;
+                        }
+                        option.innerHTML = `<div slot="headline">${c.title}</div>`;
+                        linkedCardsEl.appendChild(option);
+                    });
+                }
+            }
+
+            /**
+             * Returns an array of card objects from an array of card IDs
+             * @param {string[]} cardIds - An array of card IDs
+             * @returns {object[]} - An array of card objects
+             */
+            function getLinkedCards(cardIds) {
+                if (!cardIds || cardIds.length === 0) return [];
+                return cardIds.map(id => boardState.cards.find(c => c.id === id)).filter(Boolean);
             }
             
             /**
@@ -878,6 +1015,8 @@
              */
             function saveCardFromModal() {
                 const cardId = document.getElementById('card-id').value;
+                const linkedCardsEl = document.getElementById('linked-cards');
+                const selectedOptions = Array.from(linkedCardsEl.selectedOptions || []);
                 const cardData = {
                     id: cardId || generateUUID(),
                     laneId: document.getElementById('card-lane-id').value,
@@ -889,6 +1028,8 @@
                     reminderDays: parseInt(document.getElementById('card-reminder-days').value) || 0,
                     color: document.getElementById('card-color').value,
                     textColor: document.getElementById('card-text-color').value,
+                    category: document.getElementById('card-category').value,
+                    linkedCards: selectedOptions.map(opt => opt.value),
                 };
 
                 if (cardId) {
@@ -1177,6 +1318,12 @@
                 e.preventDefault(); // Stop the default form submission
                 saveCardFromModal();
                 cardModal.close(); // Manually close the dialog
+            });
+
+            // Add event listener for category change
+            document.getElementById('card-category').addEventListener('change', (e) => {
+                const cardId = document.getElementById('card-id').value;
+                updateLinkedCardsDropdown(cardId, e.target.value);
             });
 
             // Update reminder info when due date or reminder days change
