@@ -559,13 +559,13 @@
                     </md-filled-tonal-button>
                 </div>
                 
-                <!-- Swim Lane: Approved -->
-                <div class="swim-lane" id="lane-approved">
-                    <h2>Approved</h2>
-                    <div class="card-list" data-lane-id="approved">
+                <!-- Swim Lane: Approve -->
+                <div class="swim-lane" id="lane-approve">
+                    <h2>Approve</h2>
+                    <div class="card-list" data-lane-id="approve">
                         <!-- Cards will be dynamically inserted here -->
                     </div>
-                    <md-filled-tonal-button class="new-card-button" data-lane-id="approved">
+                    <md-filled-tonal-button class="new-card-button" data-lane-id="approve">
                         New Card
                         <span slot="icon" class="material-icons-outlined">add</span>
                     </md-filled-tonal-button>
@@ -763,7 +763,7 @@
                             totalActiveWorkTime: 0
                         }
                     ],
-                    lanes: ['idea', 'todo', 'ongoing', 'approved', 'done', 'rejected']
+                    lanes: ['idea', 'todo', 'ongoing', 'approve', 'done', 'rejected']
                 };
                 
                 let currentlyDraggingCardId = null;
@@ -1490,7 +1490,7 @@
                         
                         if (card && card.laneId !== newLaneId) {
                             const oldLaneId = card.laneId;
-                            const activeLanes = ['ongoing', 'approved'];
+                            const activeLanes = ['ongoing', 'approve'];
 
                             // Stop timer if moving out of an active lane
                             if (activeLanes.includes(oldLaneId) && !activeLanes.includes(newLaneId)) {
