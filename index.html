@@ -310,6 +310,10 @@
             font-weight: 500;
         }
 
+        .card-footer .active-work-time {
+            font-style: italic;
+        }
+
         .linked-cards-container {
             margin-bottom: 8px;
             font-size: 0.75rem;
@@ -720,7 +724,9 @@
                             color: '#FFFFFF',
                             textColor: '#000000',
                             category: 'Epic',
-                            linkedCards: []
+                            linkedCards: [],
+                            activeWorkStartTime: null,
+                            totalActiveWorkTime: 0
                         },
                         {
                             id: 'card-2',
@@ -735,7 +741,9 @@
                             color: '#FFFFFF',
                             textColor: '#000000',
                             category: 'Story',
-                            linkedCards: []
+                            linkedCards: [],
+                            activeWorkStartTime: null,
+                            totalActiveWorkTime: 0
                         },
                         {
                             id: 'card-3',
@@ -750,7 +758,9 @@
                             color: '#FFFFFF',
                             textColor: '#000000',
                             category: 'Task',
-                            linkedCards: []
+                            linkedCards: [],
+                            activeWorkStartTime: Date.now(),
+                            totalActiveWorkTime: 0
                         }
                     ],
                     lanes: ['idea', 'todo', 'ongoing', 'approved', 'done', 'rejected']
@@ -795,6 +805,24 @@
                 }
 
                 /**
+                 * Formats milliseconds into a human-readable string (e.g., 1h 30m)
+                 * @param {number} ms - The total milliseconds
+                 * @returns {string} - The formatted time string
+                 */
+                function formatWorkTime(ms) {
+                    if (ms <= 0) return '0m';
+                    const totalMinutes = Math.floor(ms / 60000);
+                    const hours = Math.floor(totalMinutes / 60);
+                    const minutes = totalMinutes % 60;
+                    let str = '';
+                    if (hours > 0) {
+                        str += `${hours}h `;
+                    }
+                    str += `${minutes}m`;
+                    return str;
+                }
+
+                /**
                  * Creates a DOM element for a card
                  * @param {object} card - The card object from boardState
                  * @returns {HTMLElement} - The card element
@@ -823,6 +851,7 @@
                         <div class="linked-cards-container"></div>
                         <div class="card-footer">
                             <span class="owner">${card.owner || 'Unassigned'}</span>
+                            <span class="active-work-time" title="Active Work Time"></span>
                             <span class="due-date ${dueDateClass}">${dueDateStr}</span>
                         </div>
                     `;
@@ -851,6 +880,14 @@
                     if (p) p.style.color = card.textColor;
                     footerSpans.forEach(span => span.style.color = card.textColor);
                 }
+
+                // Update the active work time display
+                const workTimeEl = cardEl.querySelector('.active-work-time');
+                let currentWorkTime = card.totalActiveWorkTime || 0;
+                if (card.activeWorkStartTime) {
+                    currentWorkTime += Date.now() - card.activeWorkStartTime;
+                }
+                workTimeEl.textContent = formatWorkTime(currentWorkTime);
 
                 // Add event listeners for drag-and-drop
                 cardEl.addEventListener('dragstart', (e) => {
@@ -1069,14 +1106,19 @@
                     // Update existing card
                     const index = boardState.cards.findIndex(c => c.id === cardId);
                     if (index > -1) {
-                        // Preserve createdDate
+                        // Preserve createdDate and work time properties
                         cardData.createdDate = boardState.cards[index].createdDate;
+                        cardData.activeWorkStartTime = boardState.cards[index].activeWorkStartTime;
+                        cardData.totalActiveWorkTime = boardState.cards[index].totalActiveWorkTime;
                         boardState.cards[index] = cardData;
                     }
                     showSnackbar('Card updated!');
                 } else {
                     // Create new card
                     cardData.createdDate = new Date().toISOString();
+                    // Initialize work time properties
+                    cardData.activeWorkStartTime = null;
+                    cardData.totalActiveWorkTime = 0;
                     boardState.cards.push(cardData);
                     showSnackbar('Card created!');
                 }
@@ -1447,6 +1489,22 @@
                         const card = boardState.cards.find(c => c.id === cardId);
                         
                         if (card && card.laneId !== newLaneId) {
+                            const oldLaneId = card.laneId;
+                            const activeLanes = ['ongoing', 'approved'];
+
+                            // Stop timer if moving out of an active lane
+                            if (activeLanes.includes(oldLaneId) && !activeLanes.includes(newLaneId)) {
+                                if (card.activeWorkStartTime) {
+                                    card.totalActiveWorkTime += Date.now() - card.activeWorkStartTime;
+                                    card.activeWorkStartTime = null;
+                                }
+                            }
+
+                            // Start timer if moving into an active lane
+                            if (!activeLanes.includes(oldLaneId) && activeLanes.includes(newLaneId)) {
+                                card.activeWorkStartTime = Date.now();
+                            }
+
                             card.laneId = newLaneId;
                             renderBoard(); // Re-render state
                         }
@@ -1457,6 +1515,22 @@
             // --- INITIALIZATION ---
             renderBoard();
             showSnackbar('Welcome to VeryBoard!');
+
+            // --- REAL-TIME UPDATES ---
+            // Update active work time display every minute
+            setInterval(() => {
+                boardState.cards.forEach(card => {
+                    if (card.activeWorkStartTime) {
+                        const cardEl = document.querySelector(`.kanban-card[data-card-id="${card.id}"]`);
+                        if (cardEl) {
+                            const workTimeEl = cardEl.querySelector('.active-work-time');
+                            let currentWorkTime = card.totalActiveWorkTime || 0;
+                            currentWorkTime += Date.now() - card.activeWorkStartTime;
+                            workTimeEl.textContent = formatWorkTime(currentWorkTime);
+                        }
+                    }
+                });
+            }, 60000); // 60 seconds
 
         }); // End of customElements.whenDefined
     </script>
