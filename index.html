@@ -1197,6 +1197,15 @@
                 document.getElementById('card-comment-hidden').value = document.getElementById('card-comment').innerHTML;
             });
 
+            // Allow opening links with Ctrl+Click
+            document.getElementById('card-comment').addEventListener('click', (e) => {
+                if (e.target.tagName === 'A') {
+                    if (e.ctrlKey || e.metaKey) {
+                        window.open(e.target.href, '_blank');
+                    }
+                }
+            });
+
             // --- Rich Text Editor Logic ---
             const toolbar = document.getElementById('comment-toolbar');
             const commentEditor = document.getElementById('card-comment');
@@ -1218,8 +1227,20 @@
 
                     const command = button.dataset.command;
                     if (command === 'createLink') {
+                        const selection = window.getSelection();
+                        let range = null;
+                        if (selection.rangeCount > 0) {
+                            range = selection.getRangeAt(0);
+                        }
+
                         const url = prompt('Enter a URL:');
-                        if (url) applyFormat(command, url);
+                        if (url) {
+                            if (range) {
+                                selection.removeAllRanges();
+                                selection.addRange(range);
+                            }
+                            applyFormat(command, url);
+                        }
                     } else {
                         applyFormat(command);
                     }
