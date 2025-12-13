@@ -424,6 +424,52 @@
                 flex-direction: column;
             }
         }
+
+        #link-tooltip {
+            position: fixed;
+            display: none;
+            flex-direction: column;
+            gap: 4px;
+            padding: 8px 12px;
+            background-color: var(--md-sys-color-inverse-surface);
+            color: var(--md-sys-color-inverse-on-surface);
+            border-radius: 4px;
+            font-size: 0.75rem;
+            z-index: 1000;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            pointer-events: auto;
+            min-width: 150px;
+        }
+
+        #link-tooltip.visible {
+            display: flex;
+        }
+
+        #link-tooltip a {
+            color: var(--md-sys-color-inverse-primary);
+            text-decoration: none;
+            max-width: 250px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            display: block;
+        }
+
+        #link-tooltip a:hover {
+            text-decoration: underline;
+        }
+
+        #link-tooltip .go-link {
+            cursor: pointer;
+            color: var(--md-sys-color-primary-container);
+            font-weight: 500;
+            margin-top: 4px;
+            display: block;
+        }
+
+        #link-tooltip .go-link:hover {
+            text-decoration: underline;
+        }
     </style>
 </head>
 <body>
@@ -609,6 +655,11 @@
             <div class="form-info">
                 <span id="card-created-date"></span>
                 <span id="card-reminder-date"></span>
+            </div>
+
+            <div id="link-tooltip">
+                <a id="tooltip-url" href="#" target="_blank"></a>
+                <span class="go-link" id="tooltip-go">Go to link</span>
             </div>
 
         </form>
@@ -1197,13 +1248,66 @@
                 document.getElementById('card-comment-hidden').value = document.getElementById('card-comment').innerHTML;
             });
 
-            // Allow opening links with Ctrl+Click
-            document.getElementById('card-comment').addEventListener('click', (e) => {
+            // Allow opening links with Ctrl+Click and Tooltip logic
+            const commentBox = document.getElementById('card-comment');
+
+            commentBox.addEventListener('click', (e) => {
                 if (e.target.tagName === 'A') {
                     if (e.ctrlKey || e.metaKey) {
                         window.open(e.target.href, '_blank');
                     }
                 }
+            });
+
+            // Tooltip Logic
+            const linkTooltip = document.getElementById('link-tooltip');
+            const tooltipUrl = document.getElementById('tooltip-url');
+            const tooltipGo = document.getElementById('tooltip-go');
+            let tooltipTimeout;
+
+            function showTooltip(target) {
+                clearTimeout(tooltipTimeout);
+                const rect = target.getBoundingClientRect();
+                const url = target.href;
+
+                tooltipUrl.textContent = url;
+                tooltipUrl.href = url;
+
+                // Position below the link
+                linkTooltip.style.top = (rect.bottom + 5) + 'px';
+                linkTooltip.style.left = rect.left + 'px';
+
+                linkTooltip.classList.add('visible');
+            }
+
+            function hideTooltip() {
+                tooltipTimeout = setTimeout(() => {
+                    linkTooltip.classList.remove('visible');
+                }, 300);
+            }
+
+            commentBox.addEventListener('mouseover', (e) => {
+                if (e.target.tagName === 'A') {
+                    showTooltip(e.target);
+                }
+            });
+
+            commentBox.addEventListener('mouseout', (e) => {
+                if (e.target.tagName === 'A') {
+                    hideTooltip();
+                }
+            });
+
+            linkTooltip.addEventListener('mouseover', () => {
+                clearTimeout(tooltipTimeout);
+            });
+
+            linkTooltip.addEventListener('mouseout', () => {
+                hideTooltip();
+            });
+
+            tooltipGo.addEventListener('click', () => {
+                window.open(tooltipUrl.href, '_blank');
             });
 
             // --- Rich Text Editor Logic ---
