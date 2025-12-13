@@ -6,7 +6,21 @@
     <title>VeryBoard</title>
     
     <!-- Load Material Design 3 Web Components -->
-    <script type="module" src="https://cdn.jsdelivr.net/npm/material-web@1.4.1/dist/material-web.js"></script>
+    <script type="importmap">
+        {
+          "imports": {
+            "tslib": "https://cdn.jsdelivr.net/npm/tslib@2.6.2/tslib.es6.mjs",
+            "lit": "https://cdn.jsdelivr.net/npm/lit@3.1.2/index.js",
+            "lit/": "https://cdn.jsdelivr.net/npm/lit@3.1.2/",
+            "@lit/reactive-element": "https://cdn.jsdelivr.net/npm/@lit/reactive-element@2.0.4/reactive-element.js",
+            "@lit/reactive-element/": "https://cdn.jsdelivr.net/npm/@lit/reactive-element@2.0.4/",
+            "lit-element/lit-element.js": "https://cdn.jsdelivr.net/npm/lit-element@4.0.4/lit-element.js",
+            "lit-html": "https://cdn.jsdelivr.net/npm/lit-html@3.1.2/lit-html.js",
+            "lit-html/": "https://cdn.jsdelivr.net/npm/lit-html@3.1.2/"
+          }
+        }
+    </script>
+    <script type="module" src="https://cdn.jsdelivr.net/npm/@material/web@1.4.1/all.js"></script>
     
     <!-- Load Fonts: Roboto (standard) and Material Icons (for icons) -->
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
