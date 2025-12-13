@@ -527,6 +527,18 @@
                     </md-filled-tonal-button>
                 </div>
                 
+                <!-- Swim Lane: Rejected -->
+                <div class="swim-lane" id="lane-rejected">
+                    <h2>Rejected</h2>
+                    <div class="card-list" data-lane-id="rejected">
+                        <!-- Cards will be dynamically inserted here -->
+                    </div>
+                    <md-filled-tonal-button class="new-card-button" data-lane-id="rejected">
+                        New Card
+                        <span slot="icon" class="material-icons-outlined">add</span>
+                    </md-filled-tonal-button>
+                </div>
+
                 <!-- Swim Lane: Done -->
                 <div class="swim-lane" id="lane-done">
                     <h2>Done</h2>
@@ -671,7 +683,7 @@
                             textColor: '#000000'
                         }
                     ],
-                    lanes: ['idea', 'todo', 'ongoing', 'approved', 'done']
+                    lanes: ['idea', 'todo', 'ongoing', 'approved', 'rejected', 'done']
                 };
                 
                 let currentlyDraggingCardId = null;
