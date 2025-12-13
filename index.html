@@ -815,22 +815,41 @@
             /**
              * Saves the entire boardState to a local .VBoard file
              */
-            function saveBoard() {
+            async function saveBoard() {
                 try {
                     const data = JSON.stringify(boardState, null, 2); // Pretty-print JSON
-                    const blob = new Blob([data], { type: 'application/json' });
-                    const url = URL.createObjectURL(blob);
-                    
-                    fileSaver.href = url;
                     const timestamp = new Date().toISOString().slice(0, 10);
-                    fileSaver.download = `VeryBoard_${timestamp}.VBoard`;
-                    fileSaver.click();
-                    
-                    URL.revokeObjectURL(url); // Clean up
+                    const suggestedName = `VeryBoard_${timestamp}.VBoard`;
+
+                    if ('showSaveFilePicker' in window) {
+                        const opts = {
+                            suggestedName: suggestedName,
+                            types: [{
+                                description: 'VeryBoard File',
+                                accept: { 'application/json': ['.VBoard'] },
+                            }],
+                        };
+                        const fileHandle = await window.showSaveFilePicker(opts);
+                        const writable = await fileHandle.createWritable();
+                        await writable.write(data);
+                        await writable.close();
+                    } else {
+                        // Fallback for browsers that don't support showSaveFilePicker
+                        const blob = new Blob([data], { type: 'application/json' });
+                        const url = URL.createObjectURL(blob);
+
+                        fileSaver.href = url;
+                        fileSaver.download = suggestedName;
+                        fileSaver.click();
+
+                        URL.revokeObjectURL(url); // Clean up
+                    }
                     showSnackbar('Board saved successfully!');
                 } catch (error) {
-                    console.error('Error saving board:', error);
-                    showSnackbar('Error: Could not save board.');
+                    if (error.name !== 'AbortError') {
+                        console.error('Error saving board:', error);
+                        showSnackbar('Error: Could not save board.');
+                    }
                 }
             }
             
