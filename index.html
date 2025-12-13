@@ -360,6 +360,26 @@
              color: var(--md-sys-color-primary);
          }
 
+        #comment-toolbar {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 8px;
+            align-items: center;
+        }
+
+        #comment-toolbar button, #comment-toolbar select {
+            border: 1px solid var(--md-sys-color-outline-variant);
+            background-color: var(--md-sys-color-surface-container-low);
+            color: var(--md-sys-color-on-surface-variant);
+            border-radius: 4px;
+            padding: 4px 8px;
+            cursor: pointer;
+        }
+
+        b, strong {
+            font-weight: 900;
+        }
+
         /* * FOOTER
          */
         footer {
@@ -370,7 +390,7 @@
             background-color: var(--md-sys-color-surface-container-low);
             border-top: 1px solid var(--md-sys-color-outline-variant);
         }
-        
+
         /* Hidden file inputs */
         .hidden-file-input {
             display: none;
@@ -425,6 +445,10 @@
                     Save Board
                     <span slot="icon" class="material-icons-outlined">save</span>
                 </md-outlined-button>
+                <md-filled-button id="load-card-button">
+                    Load Card
+                    <span slot="icon" class="material-icons-outlined">note_add</span>
+                </md-filled-button>
             </div>
             
             <div class="sidebar-section">
@@ -437,9 +461,6 @@
 
             <div class="sidebar-section">
                 <h2>Reminders</h2>
-                <md-text-field id="reminder-days" label="Days before due" type="number" value="3" min="0">
-                    <span slot="supporting-text">Days before due date to remind.</span>
-                </md-text-field>
                 <md-filled-button id="send-reminders-button">
                     Check Reminders
                     <span slot="icon" class="material-icons-outlined">notifications_active</span>
@@ -448,6 +469,7 @@
             
             <!-- Hidden inputs for file operations -->
             <input type="file" id="file-loader" class="hidden-file-input" accept=".VBoard">
+            <input type="file" id="card-loader" class="hidden-file-input" accept=".vbcard">
             <a id="file-saver" class="hidden-file-input"></a>
         </aside>
 
@@ -534,15 +556,42 @@
             <input type="hidden" id="card-id">
             <input type="hidden" id="card-lane-id">
             
-            <md-text-field label="Title" id="card-title" required></md-text-field>
-            
-            <md-text-field label="Brief Description" id="card-description"></md-text-field>
-            
-            <md-filled-text-field label="Comment" type="textarea" rows="5" id="card-comment"></md-filled-text-field>
-            
+            <md-outlined-text-field label="Title" id="card-title" required></md-outlined-text-field>
+
+            <md-outlined-text-field label="Brief Description" id="card-description"></md-outlined-text-field>
+
+            <label for="card-comment">Comment</label>
+            <div id="comment-toolbar">
+                <button type="button" data-command="bold"><b>B</b></button>
+                <button type="button" data-command="italic"><i>I</i></button>
+                <button type="button" data-command="insertUnorderedList">●</button>
+                <select data-command="justify">
+                    <option value="justifyLeft">Left</option>
+                    <option value="justifyCenter">Center</option>
+                    <option value="justifyRight">Right</option>
+                    <option value="justifyFull">Justify</option>
+                </select>
+                <select data-command="fontSize">
+                    <option value="1">Small</option>
+                    <option value="3">Normal</option>
+                    <option value="5">Large</option>
+                    <option value="7">Huge</option>
+                </select>
+                <button type="button" data-command="createLink">Link</button>
+            </div>
+            <div id="card-comment" contenteditable="true" style="border: 1px solid #ccc; padding: 10px; min-height: 150px; white-space: pre-wrap;"></div>
+            <textarea id="card-comment-hidden" style="display:none;"></textarea>
+
             <div class="form-row">
-                <md-text-field label="Owner (email)" type="email" id="card-owner"></md-text-field>
-                <md-text-field label="Due Date" type="date" id="card-due-date"></md-text-field>
+                <md-outlined-text-field label="Owner (email)" type="email" id="card-owner"></md-outlined-text-field>
+                <md-outlined-text-field label="Due Date" type="date" id="card-due-date"></md-outlined-text-field>
+            </div>
+            <div class="form-row">
+                <md-outlined-text-field label="Days before due" type="number" value="3" min="0" id="card-reminder-days"></md-outlined-text-field>
+            </div>
+            <div class="form-row">
+                <md-outlined-text-field label="Card Color" type="color" value="#FFFFFF" id="card-color"></md-outlined-text-field>
+                <md-outlined-text-field label="Text Color" type="color" value="#000000" id="card-text-color"></md-outlined-text-field>
             </div>
             
             <div class="form-info">
@@ -553,8 +602,9 @@
         </form>
         <div slot="actions">
             <md-text-button id="delete-button">Delete</md-text-button>
+            <md-outlined-button id="save-card-button">Save Card</md-outlined-button>
             <md-text-button form="card-form" value="cancel">Cancel</md-text-button>
-            <md-filled-button form="card-form" value="save">Save</md-filled-button>
+            <md-filled-button form="card-form" value="save">Save to Board</md-filled-button>
         </div>
     </md-dialog>
     
@@ -589,7 +639,10 @@
                             comment: 'Need to use Material Web Components.',
                             createdDate: new Date().toISOString(),
                             dueDate: '2025-10-30',
-                            owner: 'jonas@example.com'
+                            owner: 'jonas@example.com',
+                            reminderDays: 3,
+                            color: '#FFFFFF',
+                            textColor: '#000000'
                         },
                         {
                             id: 'card-2',
@@ -599,7 +652,10 @@
                             comment: '',
                             createdDate: new Date().toISOString(),
                             dueDate: '2025-10-28',
-                            owner: 'test@example.com'
+                            owner: 'test@example.com',
+                            reminderDays: 2,
+                            color: '#FFFFFF',
+                            textColor: '#000000'
                         },
                         {
                             id: 'card-3',
@@ -609,7 +665,10 @@
                             comment: 'File extension should be .VBoard',
                             createdDate: new Date().toISOString(),
                             dueDate: '2025-10-25',
-                            owner: 'dev@example.com'
+                            owner: 'dev@example.com',
+                            reminderDays: 1,
+                            color: '#FFFFFF',
+                            textColor: '#000000'
                         }
                     ],
                     lanes: ['idea', 'todo', 'ongoing', 'approved', 'done']
@@ -630,7 +689,6 @@
                 const loadButton = document.getElementById('load-button');
                 const fileLoader = document.getElementById('file-loader');
                 const fileSaver = document.getElementById('file-saver');
-                const reminderDaysInput = document.getElementById('reminder-days');
                 const sendRemindersButton = document.getElementById('send-reminders-button');
                 const remindersModal = document.getElementById('reminders-modal');
                 const remindersList = document.getElementById('reminders-list');
@@ -648,7 +706,7 @@
                  * Shows a snackbar notification
                  * @param {string} message - The message to display
                  */
-                function showSnackbar(message) {
+                window.showSnackbar = function(message) {
                     snackbar.labelText = message;
                     snackbar.open = true; // Use the 'open' property instead of show()
                 }
@@ -663,6 +721,8 @@
                     cardEl.className = 'kanban-card'; // Add class for styling
                     cardEl.draggable = true; // Make it draggable
                     cardEl.dataset.cardId = card.id;
+                    cardEl.style.backgroundColor = card.color || '#FFFFFF';
+                    cardEl.style.color = card.textColor || '#000000';
                     
                     const today = new Date().setHours(0,0,0,0);
                     const dueDate = card.dueDate ? new Date(card.dueDate) : null;
@@ -729,6 +789,17 @@
              */
             function openEditModal(card = null, defaultLaneId = null) {
                 cardForm.reset();
+                // Manually reset Material Web Components as they might not respond to form.reset()
+                document.getElementById('card-title').value = '';
+                document.getElementById('card-description').value = '';
+                document.getElementById('card-comment').innerHTML = '';
+                document.getElementById('card-comment-hidden').value = '';
+                document.getElementById('card-owner').value = '';
+                document.getElementById('card-due-date').value = '';
+                document.getElementById('card-reminder-days').value = '3';
+                document.getElementById('card-color').value = '#FFFFFF';
+                document.getElementById('card-text-color').value = '#000000';
+
                 const titleEl = document.getElementById('card-title');
                 
                 if (card) {
@@ -738,9 +809,13 @@
                     document.getElementById('card-lane-id').value = card.laneId;
                     titleEl.value = card.title;
                     document.getElementById('card-description').value = card.description;
-                    document.getElementById('card-comment').value = card.comment;
+                    document.getElementById('card-comment').innerHTML = card.comment;
+                    document.getElementById('card-comment-hidden').value = card.comment;
                     document.getElementById('card-owner').value = card.owner;
                     document.getElementById('card-due-date').value = card.dueDate;
+                    document.getElementById('card-reminder-days').value = card.reminderDays || 3;
+                    document.getElementById('card-color').value = card.color || '#FFFFFF';
+                    document.getElementById('card-text-color').value = card.textColor || '#000000';
                     
                     const created = new Date(card.createdDate).toLocaleString();
                     document.getElementById('card-created-date').textContent = `Created: ${created}`;
@@ -751,12 +826,15 @@
                     cardModal.querySelector('[slot="headline"]').textContent = 'Create New Card';
                     document.getElementById('card-id').value = '';
                     document.getElementById('card-lane-id').value = defaultLaneId || 'idea'; // Default to 'idea'
+                    document.getElementById('card-description').value = '';
+                    document.getElementById('card-comment').innerHTML = '';
+                    document.getElementById('card-reminder-days').value = 3;
                     document.getElementById('card-created-date').textContent = '';
                     deleteButton.style.display = 'none';
                 }
                 
                 // Update reminder date info
-                updateReminderInfo(document.getElementById('card-due-date').value);
+                updateReminderInfo(document.getElementById('card-due-date').value, document.getElementById('card-reminder-days').value);
                 
                 cardModal.open = true; // Use the 'open' property instead of show()
                 // Focus the title field
@@ -767,9 +845,9 @@
              * Updates the reminder date info text in the modal
              * @param {string} dueDateString - The due date from the input (YYYY-MM-DD)
              */
-            function updateReminderInfo(dueDateString) {
+            function updateReminderInfo(dueDateString, daysBeforeString) {
                 const reminderInfoEl = document.getElementById('card-reminder-date');
-                const daysBefore = parseInt(reminderDaysInput.value);
+                const daysBefore = parseInt(daysBeforeString);
                 if (dueDateString && !isNaN(daysBefore)) {
                     const dueDate = new Date(dueDateString);
                     dueDate.setDate(dueDate.getDate() - daysBefore);
@@ -789,9 +867,12 @@
                     laneId: document.getElementById('card-lane-id').value,
                     title: document.getElementById('card-title').value,
                     description: document.getElementById('card-description').value,
-                    comment: document.getElementById('card-comment').value,
+                    comment: document.getElementById('card-comment-hidden').value,
                     owner: document.getElementById('card-owner').value,
                     dueDate: document.getElementById('card-due-date').value,
+                    reminderDays: parseInt(document.getElementById('card-reminder-days').value) || 0,
+                    color: document.getElementById('card-color').value,
+                    textColor: document.getElementById('card-text-color').value,
                 };
 
                 if (cardId) {
@@ -825,7 +906,40 @@
                     showSnackbar('Card deleted.');
                 }
             }
-            
+
+            /**
+             * Saves a single card to a local .vbcard file
+             */
+            function saveCard() {
+                const cardData = {
+                    title: document.getElementById('card-title').value,
+                    description: document.getElementById('card-description').value,
+                    comment: document.getElementById('card-comment-hidden').value,
+                    owner: document.getElementById('card-owner').value,
+                    dueDate: document.getElementById('card-due-date').value,
+                    reminderDays: parseInt(document.getElementById('card-reminder-days').value) || 0,
+                    color: document.getElementById('card-color').value,
+                    textColor: document.getElementById('card-text-color').value,
+                };
+
+                try {
+                    const data = JSON.stringify(cardData, null, 2);
+                    const blob = new Blob([data], { type: 'application/json' });
+                    const url = URL.createObjectURL(blob);
+
+                    fileSaver.href = url;
+                    const timestamp = new Date().toISOString().slice(0, 10);
+                    fileSaver.download = `${cardData.title.replace(/\s/g, '_')}_${timestamp}.vbcard`;
+                    fileSaver.click();
+
+                    URL.revokeObjectURL(url);
+                    showSnackbar('Card saved successfully!');
+                } catch (error) {
+                    console.error('Error saving card:', error);
+                    showSnackbar('Error: Could not save card.');
+                }
+            }
+
             /**
              * Saves the entire boardState to a local .VBoard file
              */
@@ -897,32 +1011,65 @@
                 // Reset file input to allow loading the same file again
                 event.target.value = null;
             }
+
+            /**
+             * Loads a single .vbcard file from the user's computer
+             * @param {Event} event - The file input change event
+             */
+            function loadCard(event) {
+                const file = event.target.files[0];
+                if (!file) return;
+
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const cardData = JSON.parse(e.target.result);
+                        // Basic validation
+                        if (cardData && cardData.title) {
+                            const newCard = {
+                                id: generateUUID(),
+                                laneId: 'idea', // Default to 'idea' lane
+                                createdDate: new Date().toISOString(),
+                                ...cardData,
+                            };
+                            boardState.cards.push(newCard);
+                            renderBoard();
+                            showSnackbar('Card loaded successfully!');
+                        } else {
+                            throw new Error('Invalid file format.');
+                        }
+                    } catch (error) {
+                        console.error('Error loading card:', error);
+                        showSnackbar('Error: Could not load card. File may be corrupt.');
+                    }
+                };
+                reader.readAsText(file);
+
+                // Reset file input to allow loading the same file again
+                event.target.value = null;
+            }
             
             /**
              * Checks for cards that are due soon and shows a modal
              */
-            function checkReminders() {
-                const daysBefore = parseInt(reminderDaysInput.value);
-                if (isNaN(daysBefore)) {
-                    showSnackbar('Please enter a valid number for reminder days.');
-                    return;
-                }
-                
+            window.checkReminders = function() {
                 const today = new Date();
                 today.setHours(0, 0, 0, 0);
                 
-                const targetDate = new Date();
-                targetDate.setDate(today.getDate() + daysBefore);
-                
                 const upcomingCards = boardState.cards.filter(card => {
-                    if (!card.dueDate || card.laneId === 'done') {
+                    if (!card.dueDate || card.laneId === 'done' || card.reminderDays === undefined) {
                         return false;
                     }
+
+                    const daysBefore = card.reminderDays;
                     const dueDate = new Date(card.dueDate);
                     dueDate.setHours(0, 0, 0, 0); // Normalize due date
                     
-                    // Check if due date is between today and the target reminder date (inclusive)
-                    return dueDate >= today && dueDate <= targetDate;
+                    const reminderDate = new Date(dueDate);
+                    reminderDate.setDate(dueDate.getDate() - daysBefore);
+
+                    // Check if today is the reminder date
+                    return reminderDate.getTime() === today.getTime();
                 });
                 
                 if (upcomingCards.length === 0) {
@@ -930,19 +1077,55 @@
                     return;
                 }
                 
-                // Build list for modal
-                const listHtml = upcomingCards
-                    .sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate)) // Sort by due date
-                    .map(card => `
-                        <li>
-                            <strong>${card.title}</strong>
-                            <div>Due: ${new Date(card.dueDate).toLocaleDateString()}</div>
-                            <div>Owner: ${card.owner || 'Unassigned'}</div>
-                        </li>
-                    `).join('');
+                // Group cards by owner
+                const remindersByOwner = upcomingCards.reduce((acc, card) => {
+                    const owner = card.owner || 'Unassigned';
+                    if (!acc[owner]) {
+                        acc[owner] = [];
+                    }
+                    acc[owner].push(card);
+                    return acc;
+                }, {});
+
+                triggerEmailClient(remindersByOwner);
+            }
+
+            /**
+             * Triggers the user's default email client with a pre-filled email
+             * @param {object} remindersByOwner - An object with owners as keys and arrays of cards as values
+             */
+            function triggerEmailClient(remindersByOwner) {
+                // If in test mode, don't trigger the email client
+                if (document.body.dataset.testMode === 'true') {
+                    console.log('Test mode: triggerEmailClient mocked. Reminders:', remindersByOwner);
+                    window.emailClientTriggered = true;
+                    return;
+                }
+
+                const owners = Object.keys(remindersByOwner).filter(owner => owner !== 'Unassigned');
+                if (owners.length === 0) {
+                    showSnackbar('No reminders to send for assigned owners.');
+                    return;
+                }
+
+                const subject = 'Upcoming Task Reminders from VeryBoard';
+                let body = 'Hello,\n\nHere are your upcoming task reminders:\n\n';
+
+                for (const owner in remindersByOwner) {
+                    if (owner !== 'Unassigned') {
+                        body += `--- For ${owner} ---\n`;
+                        remindersByOwner[owner].forEach(card => {
+                            body += `  - Task: ${card.title}\n`;
+                            body += `    Description: ${card.description}\n`;
+                            body += `    Due Date: ${new Date(card.dueDate).toLocaleDateString()}\n\n`;
+                        });
+                    }
+                }
+
+                const mailtoLink = `mailto:?bcc=${owners.join(',')}&subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
                 
-                remindersList.innerHTML = `<ul>${listHtml}</ul>`;
-                remindersModal.open = true; // Use the 'open' property instead of show()
+                showSnackbar('Opening your email client to send reminders...');
+                window.location.href = mailtoLink;
             }
 
             // --- EVENT LISTENERS ---
@@ -956,6 +1139,9 @@
             saveButton.addEventListener('click', saveBoard);
             loadButton.addEventListener('click', () => fileLoader.click());
             fileLoader.addEventListener('change', loadBoard);
+            const cardLoader = document.getElementById('card-loader');
+            document.getElementById('load-card-button').addEventListener('click', () => cardLoader.click());
+            cardLoader.addEventListener('change', loadCard);
             
             // Reminder Button
             sendRemindersButton.addEventListener('click', checkReminders);
@@ -980,16 +1166,63 @@
             
             // Modal Delete Button
             deleteButton.addEventListener('click', deleteCardFromModal);
+            document.getElementById('save-card-button').addEventListener('click', saveCard);
             
-            // Update reminder info when due date or reminder days change
-            // Use 'input' for md-text-field for better responsiveness
-            document.getElementById('card-due-date').addEventListener('input', (e) => updateReminderInfo(e.target.value));
-            reminderDaysInput.addEventListener('input', () => {
-                if(cardModal.open) {
-                    updateReminderInfo(document.getElementById('card-due-date').value);
-                }
+            // The built-in form submission for md-dialog seems to be unreliable in this setup.
+            // We will manually handle the save and close action with a direct click listener.
+            document.querySelector('md-filled-button[form="card-form"][value="save"]').addEventListener('click', (e) => {
+                e.preventDefault(); // Stop the default form submission
+                saveCardFromModal();
+                cardModal.close(); // Manually close the dialog
             });
-            
+
+            // Update reminder info when due date or reminder days change
+            document.getElementById('card-due-date').addEventListener('input', (e) => updateReminderInfo(e.target.value, document.getElementById('card-reminder-days').value));
+            document.getElementById('card-reminder-days').addEventListener('input', (e) => updateReminderInfo(document.getElementById('card-due-date').value, e.target.value));
+
+            // Comment Rich Text Editor Toolbar
+            document.getElementById('card-comment').addEventListener('input', () => {
+                document.getElementById('card-comment-hidden').value = document.getElementById('card-comment').innerHTML;
+            });
+
+            // --- Rich Text Editor Logic ---
+            const toolbar = document.getElementById('comment-toolbar');
+            const commentEditor = document.getElementById('card-comment');
+            const hiddenComment = document.getElementById('card-comment-hidden');
+
+            function applyFormat(command, value = null) {
+                // We don't need to focus the editor here, as the mousedown prevention
+                // should keep the focus and selection intact.
+                document.execCommand(command, false, value);
+                // Manually sync the hidden input after applying the format
+                hiddenComment.value = commentEditor.innerHTML;
+            }
+
+            // For buttons, we use 'mousedown' to prevent them from stealing focus
+            // from the contenteditable div, which would deselect the text.
+            toolbar.querySelectorAll('button').forEach(button => {
+                button.addEventListener('mousedown', e => {
+                    e.preventDefault(); // This is the key to prevent focus shift
+
+                    const command = button.dataset.command;
+                    if (command === 'createLink') {
+                        const url = prompt('Enter a URL:');
+                        if (url) applyFormat(command, url);
+                    } else {
+                        applyFormat(command);
+                    }
+                });
+            });
+
+            // For select elements, 'change' is the appropriate event to get the new value.
+            // They don't have the same focus-stealing issue as buttons.
+            toolbar.querySelectorAll('select').forEach(select => {
+                select.addEventListener('change', e => {
+                    const command = select.dataset.command;
+                    applyFormat(command, select.value);
+                });
+            });
+
             // Drag-and-Drop Listeners for Swim Lanes
             document.querySelectorAll('.card-list').forEach(lane => {
                 lane.addEventListener('dragover', (e) => {
@@ -1029,4 +1262,3 @@
     </script>
 </body>
 </html>
-
