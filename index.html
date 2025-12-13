@@ -319,7 +319,8 @@
          
          /* Make text fields and text areas full width */
          #card-form md-text-field,
-         #card-form md-filled-text-field {
+         #card-form md-filled-text-field,
+         #card-form md-outlined-select {
             width: 100%;
          }
 
@@ -616,6 +617,18 @@
             
             <md-outlined-text-field label="Title" id="card-title" required></md-outlined-text-field>
 
+            <div class="form-row">
+                <md-outlined-select label="Type" id="card-type">
+                    <md-select-option value="task"><div slot="headline">Task</div></md-select-option>
+                    <md-select-option value="story"><div slot="headline">Story</div></md-select-option>
+                    <md-select-option value="epic"><div slot="headline">Epic</div></md-select-option>
+                </md-outlined-select>
+
+                <md-outlined-select label="Link to Parent" id="card-parent">
+                    <md-select-option value=""><div slot="headline">None</div></md-select-option>
+                </md-outlined-select>
+            </div>
+
             <md-outlined-text-field label="Brief Description" id="card-description"></md-outlined-text-field>
 
             <label for="card-comment">Comment</label>
@@ -797,10 +810,27 @@
                         dueDateStr += ' (Overdue)';
                     }
 
+                    // Determine Type Icon
+                    const type = card.type || 'task';
+                    const typeIcon = type === 'epic' ? 'flag' : (type === 'story' ? 'book' : 'task_alt');
+
+                    // Determine Parent Link
+                    let parentInfo = '';
+                    if (card.parentId) {
+                        const parent = boardState.cards.find(c => c.id === card.parentId);
+                        if (parent) {
+                            parentInfo = `<div style="font-size: 0.8rem; color: var(--md-sys-color-primary); margin-bottom: 8px;">
+                                <span class="material-icons-outlined" style="font-size: 14px; vertical-align: middle;">link</span>
+                                Linked to: ${parent.title}
+                            </div>`;
+                        }
+                    }
+
                     // Set the card's content
                     cardEl.innerHTML = `
-                    <h3>${card.title}</h3>
+                    <h3><span class="material-icons-outlined" style="font-size: 18px; vertical-align: middle; margin-right: 4px;">${typeIcon}</span>${card.title}</h3>
                         <p>${card.description}</p>
+                        ${parentInfo}
                         <div class="card-footer">
                             <span class="owner">${card.owner || 'Unassigned'}</span>
                             <span class="due-date ${dueDateClass}">${dueDateStr}</span>
@@ -846,6 +876,38 @@
             }
 
             /**
+             * Updates the parent card options based on the selected type
+             */
+            function updateParentOptions(type, currentParentId) {
+                const parentSelect = document.getElementById('card-parent');
+
+                let validParentType = null;
+                if (type === 'task') validParentType = 'story';
+                else if (type === 'story') validParentType = 'epic';
+
+                let html = '<md-select-option value=""><div slot="headline">None</div></md-select-option>';
+
+                if (validParentType) {
+                    const potentialParents = boardState.cards.filter(c => c.type === validParentType);
+                    potentialParents.forEach(p => {
+                        const selected = p.id === currentParentId ? 'selected' : '';
+                        html += `<md-select-option value="${p.id}" ${selected}><div slot="headline">${p.title}</div></md-select-option>`;
+                    });
+                }
+
+                parentSelect.innerHTML = html;
+
+                // Ensure value is set
+                setTimeout(() => {
+                    if (currentParentId) {
+                         parentSelect.value = currentParentId;
+                    } else {
+                        parentSelect.value = '';
+                    }
+                }, 0);
+            }
+
+            /**
              * Opens the modal to create or edit a card
              * @param {object | null} card - The card to edit, or null to create a new one
              * @param {string | null} defaultLaneId - The lane to add a new card to
@@ -854,6 +916,8 @@
                 cardForm.reset();
                 // Manually reset Material Web Components as they might not respond to form.reset()
                 document.getElementById('card-title').value = '';
+                document.getElementById('card-type').value = 'task';
+                updateParentOptions('task', null);
                 document.getElementById('card-description').value = '';
                 document.getElementById('card-comment').innerHTML = '';
                 document.getElementById('card-comment-hidden').value = '';
@@ -871,6 +935,8 @@
                     document.getElementById('card-id').value = card.id;
                     document.getElementById('card-lane-id').value = card.laneId;
                     titleEl.value = card.title;
+                    document.getElementById('card-type').value = card.type || 'task';
+                    updateParentOptions(card.type || 'task', card.parentId);
                     document.getElementById('card-description').value = card.description;
                     document.getElementById('card-comment').innerHTML = card.comment;
                     document.getElementById('card-comment-hidden').value = card.comment;
@@ -889,6 +955,8 @@
                     cardModal.querySelector('[slot="headline"]').textContent = 'Create New Card';
                     document.getElementById('card-id').value = '';
                     document.getElementById('card-lane-id').value = defaultLaneId || 'idea'; // Default to 'idea'
+                    document.getElementById('card-type').value = 'task';
+                    updateParentOptions('task', null);
                     document.getElementById('card-description').value = '';
                     document.getElementById('card-comment').innerHTML = '';
                     document.getElementById('card-reminder-days').value = 3;
@@ -933,6 +1001,8 @@
                     comment: document.getElementById('card-comment-hidden').value,
                     owner: document.getElementById('card-owner').value,
                     dueDate: document.getElementById('card-due-date').value,
+                    type: document.getElementById('card-type').value,
+                    parentId: document.getElementById('card-parent').value,
                     reminderDays: parseInt(document.getElementById('card-reminder-days').value) || 0,
                     color: document.getElementById('card-color').value,
                     textColor: document.getElementById('card-text-color').value,
@@ -976,6 +1046,8 @@
             function saveCard() {
                 const cardData = {
                     title: document.getElementById('card-title').value,
+                    type: document.getElementById('card-type').value,
+                    parentId: document.getElementById('card-parent').value,
                     description: document.getElementById('card-description').value,
                     comment: document.getElementById('card-comment-hidden').value,
                     owner: document.getElementById('card-owner').value,
@@ -1227,6 +1299,11 @@
                 cardModal.returnValue = 'cancel';
             });
             
+            // Type Change Listener
+            document.getElementById('card-type').addEventListener('change', (e) => {
+                updateParentOptions(e.target.value, null);
+            });
+
             // Modal Delete Button
             deleteButton.addEventListener('click', deleteCardFromModal);
             document.getElementById('save-card-button').addEventListener('click', saveCard);
