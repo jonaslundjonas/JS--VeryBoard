@@ -678,6 +678,7 @@
         </form>
         <div slot="actions">
             <md-text-button id="delete-button">Delete</md-text-button>
+            <md-outlined-button id="send-card-reminder-button">Send Reminder</md-outlined-button>
             <md-outlined-button id="save-card-button">Save Card</md-outlined-button>
             <md-text-button form="card-form" value="cancel">Cancel</md-text-button>
             <md-filled-button form="card-form" value="save">Save to Board</md-filled-button>
@@ -1308,6 +1309,37 @@
             deleteButton.addEventListener('click', deleteCardFromModal);
             document.getElementById('save-card-button').addEventListener('click', saveCard);
             
+            // Send Single Reminder
+            document.getElementById('send-card-reminder-button').addEventListener('click', () => {
+                const owner = document.getElementById('card-owner').value;
+                if (!owner) {
+                    showSnackbar('Please enter an owner email first.');
+                    return;
+                }
+
+                const card = {
+                    title: document.getElementById('card-title').value,
+                    description: document.getElementById('card-description').value,
+                    dueDate: document.getElementById('card-due-date').value
+                };
+
+                // Wrap in object structure expected by triggerEmailClient
+                triggerEmailClient({ [owner]: [card] });
+            });
+
+            // Date Picker Enhancement: Open calendar on click
+            const dateField = document.getElementById('card-due-date');
+            dateField.addEventListener('click', () => {
+                try {
+                    const input = dateField.shadowRoot.querySelector('input');
+                    if (input && typeof input.showPicker === 'function') {
+                        input.showPicker();
+                    }
+                } catch (e) {
+                    // Ignore errors (e.g. if already open or not supported)
+                }
+            });
+
             // The built-in form submission for md-dialog seems to be unreliable in this setup.
             // We will manually handle the save and close action with a direct click listener.
             document.querySelector('md-filled-button[form="card-form"][value="save"]').addEventListener('click', (e) => {
@@ -1414,8 +1446,12 @@
                             range = selection.getRangeAt(0);
                         }
 
-                        const url = prompt('Enter a URL:');
+                        let url = prompt('Enter a URL:');
                         if (url) {
+                            if (!/^https?:\/\//i.test(url) && !/^mailto:/i.test(url)) {
+                                url = 'https://' + url;
+                            }
+
                             if (range) {
                                 selection.removeAllRanges();
                                 selection.addRange(range);
