@@ -222,6 +222,28 @@
             border-bottom: 1px solid var(--md-sys-color-outline-variant);
         }
 
+        .lane-section {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            min-height: 150px; /* Ensure drop target size */
+            border-bottom: 1px solid var(--md-sys-color-outline-variant);
+        }
+
+        .lane-section:last-child {
+            border-bottom: none;
+            border-radius: 0 0 12px 12px; /* Bottom corners match lane */
+        }
+
+        .lane-section h3 {
+            font-size: 0.9rem;
+            font-weight: 500;
+            margin: 0;
+            padding: 8px 16px;
+            background-color: var(--md-sys-color-surface-container-high);
+            color: var(--md-sys-color-on-surface-variant);
+        }
+
         .card-list {
             flex-grow: 1; /* Fills the lane */
             padding: 8px;
@@ -575,28 +597,31 @@
                     </md-filled-tonal-button>
                 </div>
                 
-                <!-- Swim Lane: Rejected -->
-                <div class="swim-lane" id="lane-rejected">
-                    <h2>Rejected</h2>
-                    <div class="card-list" data-lane-id="rejected">
-                        <!-- Cards will be dynamically inserted here -->
-                    </div>
-                    <md-filled-tonal-button class="new-card-button" data-lane-id="rejected">
-                        New Card
-                        <span slot="icon" class="material-icons-outlined">add</span>
-                    </md-filled-tonal-button>
-                </div>
+                <!-- Swim Lane: Completed (Rejected & Done) -->
+                <div class="swim-lane" id="lane-completed">
+                    <h2>Completed</h2>
 
-                <!-- Swim Lane: Done -->
-                <div class="swim-lane" id="lane-done">
-                    <h2>Done</h2>
-                    <div class="card-list" data-lane-id="done">
-                        <!-- Cards will be dynamically inserted here -->
+                    <div class="lane-section">
+                        <h3>Rejected</h3>
+                        <div class="card-list" data-lane-id="rejected">
+                            <!-- Cards will be dynamically inserted here -->
+                        </div>
+                        <md-filled-tonal-button class="new-card-button" data-lane-id="rejected">
+                            New Card
+                            <span slot="icon" class="material-icons-outlined">add</span>
+                        </md-filled-tonal-button>
                     </div>
-                    <md-filled-tonal-button class="new-card-button" data-lane-id="done">
-                        New Card
-                        <span slot="icon" class="material-icons-outlined">add</span>
-                    </md-filled-tonal-button>
+
+                    <div class="lane-section">
+                        <h3>Done</h3>
+                        <div class="card-list" data-lane-id="done">
+                            <!-- Cards will be dynamically inserted here -->
+                        </div>
+                        <md-filled-tonal-button class="new-card-button" data-lane-id="done">
+                            New Card
+                            <span slot="icon" class="material-icons-outlined">add</span>
+                        </md-filled-tonal-button>
+                    </div>
                 </div>
 
             </div>
