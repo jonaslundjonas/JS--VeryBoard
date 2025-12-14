@@ -561,6 +561,18 @@
                     </md-filled-tonal-button>
                 </div>
                 
+                <!-- Swim Lane: Approved -->
+                <div class="swim-lane" id="lane-approved">
+                    <h2>Approved</h2>
+                    <div class="card-list" data-lane-id="approved">
+                        <!-- Cards will be dynamically inserted here -->
+                    </div>
+                    <md-filled-tonal-button class="new-card-button" data-lane-id="approved">
+                        New Card
+                        <span slot="icon" class="material-icons-outlined">add</span>
+                    </md-filled-tonal-button>
+                </div>
+
                 <!-- Swim Lane: To do -->
                 <div class="swim-lane" id="lane-todo">
                     <h2>To do</h2>
@@ -580,18 +592,6 @@
                         <!-- Cards will be dynamically inserted here -->
                     </div>
                     <md-filled-tonal-button class="new-card-button" data-lane-id="ongoing">
-                        New Card
-                        <span slot="icon" class="material-icons-outlined">add</span>
-                    </md-filled-tonal-button>
-                </div>
-                
-                <!-- Swim Lane: Approved -->
-                <div class="swim-lane" id="lane-approved">
-                    <h2>Approved</h2>
-                    <div class="card-list" data-lane-id="approved">
-                        <!-- Cards will be dynamically inserted here -->
-                    </div>
-                    <md-filled-tonal-button class="new-card-button" data-lane-id="approved">
                         New Card
                         <span slot="icon" class="material-icons-outlined">add</span>
                     </md-filled-tonal-button>
@@ -776,7 +776,7 @@
                             textColor: '#000000'
                         }
                     ],
-                    lanes: ['idea', 'todo', 'ongoing', 'approved', 'rejected', 'done']
+                    lanes: ['idea', 'approved', 'todo', 'ongoing', 'rejected', 'done']
                 };
                 
                 let currentlyDraggingCardId = null;
