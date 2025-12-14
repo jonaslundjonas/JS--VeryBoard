@@ -340,7 +340,8 @@
          
          /* Custom style for the delete button */
          #delete-button {
-             --md-text-button-label-text-color: var(--md-sys-color-error);
+             --md-icon-button-icon-color: var(--md-sys-color-error);
+             color: var(--md-sys-color-error);
              margin-right: auto; /* Pushes to the far left */
          }
          
@@ -677,10 +678,12 @@
 
         </form>
         <div slot="actions">
-            <md-text-button id="delete-button">Delete</md-text-button>
+            <md-icon-button id="delete-button" aria-label="Delete">
+                <span class="material-icons-outlined">delete</span>
+            </md-icon-button>
             <md-outlined-button id="send-card-reminder-button">Send Reminder</md-outlined-button>
             <md-outlined-button id="save-card-button">Save Card</md-outlined-button>
-            <md-text-button form="card-form" value="cancel">Cancel</md-text-button>
+            <md-text-button id="cancel-button" type="button">Cancel</md-text-button>
             <md-filled-button form="card-form" value="save">Save to Board</md-filled-button>
         </div>
     </md-dialog>
@@ -1308,6 +1311,11 @@
             // Modal Delete Button
             deleteButton.addEventListener('click', deleteCardFromModal);
             document.getElementById('save-card-button').addEventListener('click', saveCard);
+
+            // Cancel Button
+            document.getElementById('cancel-button').addEventListener('click', () => {
+                cardModal.close('cancel');
+            });
             
             // Send Single Reminder
             document.getElementById('send-card-reminder-button').addEventListener('click', () => {
