@@ -6,7 +6,21 @@
     <title>VeryBoard</title>
     
     <!-- Load Material Design 3 Web Components -->
-    <script type="module" src="https://cdn.jsdelivr.net/npm/material-web@1.4.1/dist/material-web.js"></script>
+    <script type="importmap">
+        {
+          "imports": {
+            "tslib": "https://cdn.jsdelivr.net/npm/tslib@2.6.2/tslib.es6.mjs",
+            "lit": "https://cdn.jsdelivr.net/npm/lit@3.1.2/index.js",
+            "lit/": "https://cdn.jsdelivr.net/npm/lit@3.1.2/",
+            "@lit/reactive-element": "https://cdn.jsdelivr.net/npm/@lit/reactive-element@2.0.4/reactive-element.js",
+            "@lit/reactive-element/": "https://cdn.jsdelivr.net/npm/@lit/reactive-element@2.0.4/",
+            "lit-element/lit-element.js": "https://cdn.jsdelivr.net/npm/lit-element@4.0.4/lit-element.js",
+            "lit-html": "https://cdn.jsdelivr.net/npm/lit-html@3.1.2/lit-html.js",
+            "lit-html/": "https://cdn.jsdelivr.net/npm/lit-html@3.1.2/"
+          }
+        }
+    </script>
+    <script type="module" src="https://cdn.jsdelivr.net/npm/@material/web@1.4.1/all.js"></script>
     
     <!-- Load Fonts: Roboto (standard) and Material Icons (for icons) -->
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
@@ -208,6 +222,28 @@
             border-bottom: 1px solid var(--md-sys-color-outline-variant);
         }
 
+        .lane-section {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            min-height: 150px; /* Ensure drop target size */
+            border-bottom: 1px solid var(--md-sys-color-outline-variant);
+        }
+
+        .lane-section:last-child {
+            border-bottom: none;
+            border-radius: 0 0 12px 12px; /* Bottom corners match lane */
+        }
+
+        .lane-section h3 {
+            font-size: 0.9rem;
+            font-weight: 500;
+            margin: 0;
+            padding: 8px 16px;
+            background-color: var(--md-sys-color-surface-container-high);
+            color: var(--md-sys-color-on-surface-variant);
+        }
+
         .card-list {
             flex-grow: 1; /* Fills the lane */
             padding: 8px;
@@ -305,7 +341,8 @@
          
          /* Make text fields and text areas full width */
          #card-form md-text-field,
-         #card-form md-filled-text-field {
+         #card-form md-filled-text-field,
+         #card-form md-outlined-select {
             width: 100%;
          }
 
@@ -325,7 +362,8 @@
          
          /* Custom style for the delete button */
          #delete-button {
-             --md-text-button-label-text-color: var(--md-sys-color-error);
+             --md-icon-button-icon-color: var(--md-sys-color-error);
+             color: var(--md-sys-color-error);
              margin-right: auto; /* Pushes to the far left */
          }
          
@@ -346,6 +384,26 @@
              color: var(--md-sys-color-primary);
          }
 
+        #comment-toolbar {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 8px;
+            align-items: center;
+        }
+
+        #comment-toolbar button, #comment-toolbar select {
+            border: 1px solid var(--md-sys-color-outline-variant);
+            background-color: var(--md-sys-color-surface-container-low);
+            color: var(--md-sys-color-on-surface-variant);
+            border-radius: 4px;
+            padding: 4px 8px;
+            cursor: pointer;
+        }
+
+        b, strong {
+            font-weight: 900;
+        }
+
         /* * FOOTER
          */
         footer {
@@ -356,7 +414,7 @@
             background-color: var(--md-sys-color-surface-container-low);
             border-top: 1px solid var(--md-sys-color-outline-variant);
         }
-        
+
         /* Hidden file inputs */
         .hidden-file-input {
             display: none;
@@ -390,6 +448,52 @@
                 flex-direction: column;
             }
         }
+
+        #link-tooltip {
+            position: fixed;
+            display: none;
+            flex-direction: column;
+            gap: 4px;
+            padding: 8px 12px;
+            background-color: var(--md-sys-color-inverse-surface);
+            color: var(--md-sys-color-inverse-on-surface);
+            border-radius: 4px;
+            font-size: 0.75rem;
+            z-index: 1000;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            pointer-events: auto;
+            min-width: 150px;
+        }
+
+        #link-tooltip.visible {
+            display: flex;
+        }
+
+        #link-tooltip a {
+            color: var(--md-sys-color-inverse-primary);
+            text-decoration: none;
+            max-width: 250px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            display: block;
+        }
+
+        #link-tooltip a:hover {
+            text-decoration: underline;
+        }
+
+        #link-tooltip .go-link {
+            cursor: pointer;
+            color: var(--md-sys-color-primary-container);
+            font-weight: 500;
+            margin-top: 4px;
+            display: block;
+        }
+
+        #link-tooltip .go-link:hover {
+            text-decoration: underline;
+        }
     </style>
 </head>
 <body>
@@ -411,6 +515,10 @@
                     Save Board
                     <span slot="icon" class="material-icons-outlined">save</span>
                 </md-outlined-button>
+                <md-filled-button id="load-card-button">
+                    Load Card
+                    <span slot="icon" class="material-icons-outlined">note_add</span>
+                </md-filled-button>
             </div>
             
             <div class="sidebar-section">
@@ -423,9 +531,6 @@
 
             <div class="sidebar-section">
                 <h2>Reminders</h2>
-                <md-text-field id="reminder-days" label="Days before due" type="number" value="3" min="0">
-                    <span slot="supporting-text">Days before due date to remind.</span>
-                </md-text-field>
                 <md-filled-button id="send-reminders-button">
                     Check Reminders
                     <span slot="icon" class="material-icons-outlined">notifications_active</span>
@@ -434,6 +539,7 @@
             
             <!-- Hidden inputs for file operations -->
             <input type="file" id="file-loader" class="hidden-file-input" accept=".VBoard">
+            <input type="file" id="card-loader" class="hidden-file-input" accept=".vbcard">
             <a id="file-saver" class="hidden-file-input"></a>
         </aside>
 
@@ -455,6 +561,18 @@
                     </md-filled-tonal-button>
                 </div>
                 
+                <!-- Swim Lane: Approved -->
+                <div class="swim-lane" id="lane-approved">
+                    <h2>Approved</h2>
+                    <div class="card-list" data-lane-id="approved">
+                        <!-- Cards will be dynamically inserted here -->
+                    </div>
+                    <md-filled-tonal-button class="new-card-button" data-lane-id="approved">
+                        New Card
+                        <span slot="icon" class="material-icons-outlined">add</span>
+                    </md-filled-tonal-button>
+                </div>
+
                 <!-- Swim Lane: To do -->
                 <div class="swim-lane" id="lane-todo">
                     <h2>To do</h2>
@@ -479,28 +597,31 @@
                     </md-filled-tonal-button>
                 </div>
                 
-                <!-- Swim Lane: Approved -->
-                <div class="swim-lane" id="lane-approved">
-                    <h2>Approved</h2>
-                    <div class="card-list" data-lane-id="approved">
-                        <!-- Cards will be dynamically inserted here -->
+                <!-- Swim Lane: Completed (Rejected & Done) -->
+                <div class="swim-lane" id="lane-completed">
+                    <h2>Completed</h2>
+
+                    <div class="lane-section">
+                        <h3>Rejected</h3>
+                        <div class="card-list" data-lane-id="rejected">
+                            <!-- Cards will be dynamically inserted here -->
+                        </div>
+                        <md-filled-tonal-button class="new-card-button" data-lane-id="rejected">
+                            New Card
+                            <span slot="icon" class="material-icons-outlined">add</span>
+                        </md-filled-tonal-button>
                     </div>
-                    <md-filled-tonal-button class="new-card-button" data-lane-id="approved">
-                        New Card
-                        <span slot="icon" class="material-icons-outlined">add</span>
-                    </md-filled-tonal-button>
-                </div>
-                
-                <!-- Swim Lane: Done -->
-                <div class="swim-lane" id="lane-done">
-                    <h2>Done</h2>
-                    <div class="card-list" data-lane-id="done">
-                        <!-- Cards will be dynamically inserted here -->
+
+                    <div class="lane-section">
+                        <h3>Done</h3>
+                        <div class="card-list" data-lane-id="done">
+                            <!-- Cards will be dynamically inserted here -->
+                        </div>
+                        <md-filled-tonal-button class="new-card-button" data-lane-id="done">
+                            New Card
+                            <span slot="icon" class="material-icons-outlined">add</span>
+                        </md-filled-tonal-button>
                     </div>
-                    <md-filled-tonal-button class="new-card-button" data-lane-id="done">
-                        New Card
-                        <span slot="icon" class="material-icons-outlined">add</span>
-                    </md-filled-tonal-button>
                 </div>
 
             </div>
@@ -520,15 +641,54 @@
             <input type="hidden" id="card-id">
             <input type="hidden" id="card-lane-id">
             
-            <md-text-field label="Title" id="card-title" required></md-text-field>
-            
-            <md-text-field label="Brief Description" id="card-description"></md-text-field>
-            
-            <md-filled-text-field label="Comment" type="textarea" rows="5" id="card-comment"></md-filled-text-field>
-            
+            <md-outlined-text-field label="Title" id="card-title" required></md-outlined-text-field>
+
             <div class="form-row">
-                <md-text-field label="Owner (email)" type="email" id="card-owner"></md-text-field>
-                <md-text-field label="Due Date" type="date" id="card-due-date"></md-text-field>
+                <md-outlined-select label="Type" id="card-type">
+                    <md-select-option value="task"><div slot="headline">Task</div></md-select-option>
+                    <md-select-option value="story"><div slot="headline">Story</div></md-select-option>
+                    <md-select-option value="epic"><div slot="headline">Epic</div></md-select-option>
+                </md-outlined-select>
+
+                <md-outlined-select label="Link to Parent" id="card-parent">
+                    <md-select-option value=""><div slot="headline">None</div></md-select-option>
+                </md-outlined-select>
+            </div>
+
+            <md-outlined-text-field label="Brief Description" id="card-description"></md-outlined-text-field>
+
+            <label for="card-comment">Comment</label>
+            <div id="comment-toolbar">
+                <button type="button" data-command="bold"><b>B</b></button>
+                <button type="button" data-command="italic"><i>I</i></button>
+                <button type="button" data-command="insertUnorderedList">●</button>
+                <select data-command="justify">
+                    <option value="justifyLeft">Left</option>
+                    <option value="justifyCenter">Center</option>
+                    <option value="justifyRight">Right</option>
+                    <option value="justifyFull">Justify</option>
+                </select>
+                <select data-command="fontSize">
+                    <option value="1">Small</option>
+                    <option value="3">Normal</option>
+                    <option value="5">Large</option>
+                    <option value="7">Huge</option>
+                </select>
+                <button type="button" data-command="createLink">Link</button>
+            </div>
+            <div id="card-comment" contenteditable="true" style="border: 1px solid #ccc; padding: 10px; min-height: 150px; white-space: pre-wrap;"></div>
+            <textarea id="card-comment-hidden" style="display:none;"></textarea>
+
+            <div class="form-row">
+                <md-outlined-text-field label="Owner (email)" type="email" id="card-owner"></md-outlined-text-field>
+                <md-outlined-text-field label="Due Date" type="date" id="card-due-date"></md-outlined-text-field>
+            </div>
+            <div class="form-row">
+                <md-outlined-text-field label="Days before due" type="number" value="3" min="0" id="card-reminder-days"></md-outlined-text-field>
+            </div>
+            <div class="form-row">
+                <md-outlined-text-field label="Card Color" type="color" value="#FFFFFF" id="card-color"></md-outlined-text-field>
+                <md-outlined-text-field label="Text Color" type="color" value="#000000" id="card-text-color"></md-outlined-text-field>
             </div>
             
             <div class="form-info">
@@ -536,11 +696,20 @@
                 <span id="card-reminder-date"></span>
             </div>
 
+            <div id="link-tooltip">
+                <a id="tooltip-url" href="#" target="_blank"></a>
+                <span class="go-link" id="tooltip-go">Go to link</span>
+            </div>
+
         </form>
         <div slot="actions">
-            <md-text-button id="delete-button">Delete</md-text-button>
-            <md-text-button form="card-form" value="cancel">Cancel</md-text-button>
-            <md-filled-button form="card-form" value="save">Save</md-filled-button>
+            <md-icon-button id="delete-button" aria-label="Delete">
+                <span class="material-icons-outlined">delete</span>
+            </md-icon-button>
+            <md-outlined-button id="send-card-reminder-button">Send Reminder</md-outlined-button>
+            <md-outlined-button id="save-card-button">Save Card</md-outlined-button>
+            <md-text-button id="cancel-button" type="button">Cancel</md-text-button>
+            <md-filled-button form="card-form" value="save">Save to Board</md-filled-button>
         </div>
     </md-dialog>
     
@@ -575,7 +744,10 @@
                             comment: 'Need to use Material Web Components.',
                             createdDate: new Date().toISOString(),
                             dueDate: '2025-10-30',
-                            owner: 'jonas@example.com'
+                            owner: 'jonas@example.com',
+                            reminderDays: 3,
+                            color: '#FFFFFF',
+                            textColor: '#000000'
                         },
                         {
                             id: 'card-2',
@@ -585,7 +757,10 @@
                             comment: '',
                             createdDate: new Date().toISOString(),
                             dueDate: '2025-10-28',
-                            owner: 'test@example.com'
+                            owner: 'test@example.com',
+                            reminderDays: 2,
+                            color: '#FFFFFF',
+                            textColor: '#000000'
                         },
                         {
                             id: 'card-3',
@@ -595,10 +770,13 @@
                             comment: 'File extension should be .VBoard',
                             createdDate: new Date().toISOString(),
                             dueDate: '2025-10-25',
-                            owner: 'dev@example.com'
+                            owner: 'dev@example.com',
+                            reminderDays: 1,
+                            color: '#FFFFFF',
+                            textColor: '#000000'
                         }
                     ],
-                    lanes: ['idea', 'todo', 'ongoing', 'approved', 'done']
+                    lanes: ['idea', 'approved', 'todo', 'ongoing', 'rejected', 'done']
                 };
                 
                 let currentlyDraggingCardId = null;
@@ -616,7 +794,6 @@
                 const loadButton = document.getElementById('load-button');
                 const fileLoader = document.getElementById('file-loader');
                 const fileSaver = document.getElementById('file-saver');
-                const reminderDaysInput = document.getElementById('reminder-days');
                 const sendRemindersButton = document.getElementById('send-reminders-button');
                 const remindersModal = document.getElementById('reminders-modal');
                 const remindersList = document.getElementById('reminders-list');
@@ -634,7 +811,7 @@
                  * Shows a snackbar notification
                  * @param {string} message - The message to display
                  */
-                function showSnackbar(message) {
+                window.showSnackbar = function(message) {
                     snackbar.labelText = message;
                     snackbar.open = true; // Use the 'open' property instead of show()
                 }
@@ -649,6 +826,8 @@
                     cardEl.className = 'kanban-card'; // Add class for styling
                     cardEl.draggable = true; // Make it draggable
                     cardEl.dataset.cardId = card.id;
+                    cardEl.style.backgroundColor = card.color || '#FFFFFF';
+                    cardEl.style.color = card.textColor || '#000000';
                     
                     const today = new Date().setHours(0,0,0,0);
                     const dueDate = card.dueDate ? new Date(card.dueDate) : null;
@@ -660,10 +839,27 @@
                         dueDateStr += ' (Overdue)';
                     }
 
+                    // Determine Type Icon
+                    const type = card.type || 'task';
+                    const typeIcon = type === 'epic' ? 'flag' : (type === 'story' ? 'book' : 'task_alt');
+
+                    // Determine Parent Link
+                    let parentInfo = '';
+                    if (card.parentId) {
+                        const parent = boardState.cards.find(c => c.id === card.parentId);
+                        if (parent) {
+                            parentInfo = `<div style="font-size: 0.8rem; color: var(--md-sys-color-primary); margin-bottom: 8px;">
+                                <span class="material-icons-outlined" style="font-size: 14px; vertical-align: middle;">link</span>
+                                Linked to: ${parent.title}
+                            </div>`;
+                        }
+                    }
+
                     // Set the card's content
                     cardEl.innerHTML = `
-                    <h3>${card.title}</h3>
+                    <h3><span class="material-icons-outlined" style="font-size: 18px; vertical-align: middle; margin-right: 4px;">${typeIcon}</span>${card.title}</h3>
                         <p>${card.description}</p>
+                        ${parentInfo}
                         <div class="card-footer">
                             <span class="owner">${card.owner || 'Unassigned'}</span>
                             <span class="due-date ${dueDateClass}">${dueDateStr}</span>
@@ -709,12 +905,57 @@
             }
 
             /**
+             * Updates the parent card options based on the selected type
+             */
+            function updateParentOptions(type, currentParentId) {
+                const parentSelect = document.getElementById('card-parent');
+
+                let validParentType = null;
+                if (type === 'task') validParentType = 'story';
+                else if (type === 'story') validParentType = 'epic';
+
+                let html = '<md-select-option value=""><div slot="headline">None</div></md-select-option>';
+
+                if (validParentType) {
+                    const potentialParents = boardState.cards.filter(c => c.type === validParentType);
+                    potentialParents.forEach(p => {
+                        const selected = p.id === currentParentId ? 'selected' : '';
+                        html += `<md-select-option value="${p.id}" ${selected}><div slot="headline">${p.title}</div></md-select-option>`;
+                    });
+                }
+
+                parentSelect.innerHTML = html;
+
+                // Ensure value is set
+                setTimeout(() => {
+                    if (currentParentId) {
+                         parentSelect.value = currentParentId;
+                    } else {
+                        parentSelect.value = '';
+                    }
+                }, 0);
+            }
+
+            /**
              * Opens the modal to create or edit a card
              * @param {object | null} card - The card to edit, or null to create a new one
              * @param {string | null} defaultLaneId - The lane to add a new card to
              */
             function openEditModal(card = null, defaultLaneId = null) {
                 cardForm.reset();
+                // Manually reset Material Web Components as they might not respond to form.reset()
+                document.getElementById('card-title').value = '';
+                document.getElementById('card-type').value = 'task';
+                updateParentOptions('task', null);
+                document.getElementById('card-description').value = '';
+                document.getElementById('card-comment').innerHTML = '';
+                document.getElementById('card-comment-hidden').value = '';
+                document.getElementById('card-owner').value = '';
+                document.getElementById('card-due-date').value = '';
+                document.getElementById('card-reminder-days').value = '3';
+                document.getElementById('card-color').value = '#FFFFFF';
+                document.getElementById('card-text-color').value = '#000000';
+
                 const titleEl = document.getElementById('card-title');
                 
                 if (card) {
@@ -723,10 +964,16 @@
                     document.getElementById('card-id').value = card.id;
                     document.getElementById('card-lane-id').value = card.laneId;
                     titleEl.value = card.title;
+                    document.getElementById('card-type').value = card.type || 'task';
+                    updateParentOptions(card.type || 'task', card.parentId);
                     document.getElementById('card-description').value = card.description;
-                    document.getElementById('card-comment').value = card.comment;
+                    document.getElementById('card-comment').innerHTML = card.comment;
+                    document.getElementById('card-comment-hidden').value = card.comment;
                     document.getElementById('card-owner').value = card.owner;
                     document.getElementById('card-due-date').value = card.dueDate;
+                    document.getElementById('card-reminder-days').value = card.reminderDays || 3;
+                    document.getElementById('card-color').value = card.color || '#FFFFFF';
+                    document.getElementById('card-text-color').value = card.textColor || '#000000';
                     
                     const created = new Date(card.createdDate).toLocaleString();
                     document.getElementById('card-created-date').textContent = `Created: ${created}`;
@@ -737,12 +984,17 @@
                     cardModal.querySelector('[slot="headline"]').textContent = 'Create New Card';
                     document.getElementById('card-id').value = '';
                     document.getElementById('card-lane-id').value = defaultLaneId || 'idea'; // Default to 'idea'
+                    document.getElementById('card-type').value = 'task';
+                    updateParentOptions('task', null);
+                    document.getElementById('card-description').value = '';
+                    document.getElementById('card-comment').innerHTML = '';
+                    document.getElementById('card-reminder-days').value = 3;
                     document.getElementById('card-created-date').textContent = '';
                     deleteButton.style.display = 'none';
                 }
                 
                 // Update reminder date info
-                updateReminderInfo(document.getElementById('card-due-date').value);
+                updateReminderInfo(document.getElementById('card-due-date').value, document.getElementById('card-reminder-days').value);
                 
                 cardModal.open = true; // Use the 'open' property instead of show()
                 // Focus the title field
@@ -753,9 +1005,9 @@
              * Updates the reminder date info text in the modal
              * @param {string} dueDateString - The due date from the input (YYYY-MM-DD)
              */
-            function updateReminderInfo(dueDateString) {
+            function updateReminderInfo(dueDateString, daysBeforeString) {
                 const reminderInfoEl = document.getElementById('card-reminder-date');
-                const daysBefore = parseInt(reminderDaysInput.value);
+                const daysBefore = parseInt(daysBeforeString);
                 if (dueDateString && !isNaN(daysBefore)) {
                     const dueDate = new Date(dueDateString);
                     dueDate.setDate(dueDate.getDate() - daysBefore);
@@ -775,9 +1027,14 @@
                     laneId: document.getElementById('card-lane-id').value,
                     title: document.getElementById('card-title').value,
                     description: document.getElementById('card-description').value,
-                    comment: document.getElementById('card-comment').value,
+                    comment: document.getElementById('card-comment-hidden').value,
                     owner: document.getElementById('card-owner').value,
                     dueDate: document.getElementById('card-due-date').value,
+                    type: document.getElementById('card-type').value,
+                    parentId: document.getElementById('card-parent').value,
+                    reminderDays: parseInt(document.getElementById('card-reminder-days').value) || 0,
+                    color: document.getElementById('card-color').value,
+                    textColor: document.getElementById('card-text-color').value,
                 };
 
                 if (cardId) {
@@ -811,26 +1068,80 @@
                     showSnackbar('Card deleted.');
                 }
             }
-            
+
+            /**
+             * Saves a single card to a local .vbcard file
+             */
+            function saveCard() {
+                const cardData = {
+                    title: document.getElementById('card-title').value,
+                    type: document.getElementById('card-type').value,
+                    parentId: document.getElementById('card-parent').value,
+                    description: document.getElementById('card-description').value,
+                    comment: document.getElementById('card-comment-hidden').value,
+                    owner: document.getElementById('card-owner').value,
+                    dueDate: document.getElementById('card-due-date').value,
+                    reminderDays: parseInt(document.getElementById('card-reminder-days').value) || 0,
+                    color: document.getElementById('card-color').value,
+                    textColor: document.getElementById('card-text-color').value,
+                };
+
+                try {
+                    const data = JSON.stringify(cardData, null, 2);
+                    const blob = new Blob([data], { type: 'application/json' });
+                    const url = URL.createObjectURL(blob);
+
+                    fileSaver.href = url;
+                    const timestamp = new Date().toISOString().slice(0, 10);
+                    fileSaver.download = `${cardData.title.replace(/\s/g, '_')}_${timestamp}.vbcard`;
+                    fileSaver.click();
+
+                    URL.revokeObjectURL(url);
+                    showSnackbar('Card saved successfully!');
+                } catch (error) {
+                    console.error('Error saving card:', error);
+                    showSnackbar('Error: Could not save card.');
+                }
+            }
+
             /**
              * Saves the entire boardState to a local .VBoard file
              */
-            function saveBoard() {
+            async function saveBoard() {
                 try {
                     const data = JSON.stringify(boardState, null, 2); // Pretty-print JSON
-                    const blob = new Blob([data], { type: 'application/json' });
-                    const url = URL.createObjectURL(blob);
-                    
-                    fileSaver.href = url;
                     const timestamp = new Date().toISOString().slice(0, 10);
-                    fileSaver.download = `VeryBoard_${timestamp}.VBoard`;
-                    fileSaver.click();
-                    
-                    URL.revokeObjectURL(url); // Clean up
+                    const suggestedName = `VeryBoard_${timestamp}.VBoard`;
+
+                    if ('showSaveFilePicker' in window) {
+                        const opts = {
+                            suggestedName: suggestedName,
+                            types: [{
+                                description: 'VeryBoard File',
+                                accept: { 'application/json': ['.VBoard'] },
+                            }],
+                        };
+                        const fileHandle = await window.showSaveFilePicker(opts);
+                        const writable = await fileHandle.createWritable();
+                        await writable.write(data);
+                        await writable.close();
+                    } else {
+                        // Fallback for browsers that don't support showSaveFilePicker
+                        const blob = new Blob([data], { type: 'application/json' });
+                        const url = URL.createObjectURL(blob);
+
+                        fileSaver.href = url;
+                        fileSaver.download = suggestedName;
+                        fileSaver.click();
+
+                        URL.revokeObjectURL(url); // Clean up
+                    }
                     showSnackbar('Board saved successfully!');
                 } catch (error) {
-                    console.error('Error saving board:', error);
-                    showSnackbar('Error: Could not save board.');
+                    if (error.name !== 'AbortError') {
+                        console.error('Error saving board:', error);
+                        showSnackbar('Error: Could not save board.');
+                    }
                 }
             }
             
@@ -864,32 +1175,65 @@
                 // Reset file input to allow loading the same file again
                 event.target.value = null;
             }
+
+            /**
+             * Loads a single .vbcard file from the user's computer
+             * @param {Event} event - The file input change event
+             */
+            function loadCard(event) {
+                const file = event.target.files[0];
+                if (!file) return;
+
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const cardData = JSON.parse(e.target.result);
+                        // Basic validation
+                        if (cardData && cardData.title) {
+                            const newCard = {
+                                id: generateUUID(),
+                                laneId: 'idea', // Default to 'idea' lane
+                                createdDate: new Date().toISOString(),
+                                ...cardData,
+                            };
+                            boardState.cards.push(newCard);
+                            renderBoard();
+                            showSnackbar('Card loaded successfully!');
+                        } else {
+                            throw new Error('Invalid file format.');
+                        }
+                    } catch (error) {
+                        console.error('Error loading card:', error);
+                        showSnackbar('Error: Could not load card. File may be corrupt.');
+                    }
+                };
+                reader.readAsText(file);
+
+                // Reset file input to allow loading the same file again
+                event.target.value = null;
+            }
             
             /**
              * Checks for cards that are due soon and shows a modal
              */
-            function checkReminders() {
-                const daysBefore = parseInt(reminderDaysInput.value);
-                if (isNaN(daysBefore)) {
-                    showSnackbar('Please enter a valid number for reminder days.');
-                    return;
-                }
-                
+            window.checkReminders = function() {
                 const today = new Date();
                 today.setHours(0, 0, 0, 0);
                 
-                const targetDate = new Date();
-                targetDate.setDate(today.getDate() + daysBefore);
-                
                 const upcomingCards = boardState.cards.filter(card => {
-                    if (!card.dueDate || card.laneId === 'done') {
+                    if (!card.dueDate || card.laneId === 'done' || card.reminderDays === undefined) {
                         return false;
                     }
+
+                    const daysBefore = card.reminderDays;
                     const dueDate = new Date(card.dueDate);
                     dueDate.setHours(0, 0, 0, 0); // Normalize due date
                     
-                    // Check if due date is between today and the target reminder date (inclusive)
-                    return dueDate >= today && dueDate <= targetDate;
+                    const reminderDate = new Date(dueDate);
+                    reminderDate.setDate(dueDate.getDate() - daysBefore);
+
+                    // Check if today is the reminder date
+                    return reminderDate.getTime() === today.getTime();
                 });
                 
                 if (upcomingCards.length === 0) {
@@ -897,19 +1241,55 @@
                     return;
                 }
                 
-                // Build list for modal
-                const listHtml = upcomingCards
-                    .sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate)) // Sort by due date
-                    .map(card => `
-                        <li>
-                            <strong>${card.title}</strong>
-                            <div>Due: ${new Date(card.dueDate).toLocaleDateString()}</div>
-                            <div>Owner: ${card.owner || 'Unassigned'}</div>
-                        </li>
-                    `).join('');
+                // Group cards by owner
+                const remindersByOwner = upcomingCards.reduce((acc, card) => {
+                    const owner = card.owner || 'Unassigned';
+                    if (!acc[owner]) {
+                        acc[owner] = [];
+                    }
+                    acc[owner].push(card);
+                    return acc;
+                }, {});
+
+                triggerEmailClient(remindersByOwner);
+            }
+
+            /**
+             * Triggers the user's default email client with a pre-filled email
+             * @param {object} remindersByOwner - An object with owners as keys and arrays of cards as values
+             */
+            function triggerEmailClient(remindersByOwner) {
+                // If in test mode, don't trigger the email client
+                if (document.body.dataset.testMode === 'true') {
+                    console.log('Test mode: triggerEmailClient mocked. Reminders:', remindersByOwner);
+                    window.emailClientTriggered = true;
+                    return;
+                }
+
+                const owners = Object.keys(remindersByOwner).filter(owner => owner !== 'Unassigned');
+                if (owners.length === 0) {
+                    showSnackbar('No reminders to send for assigned owners.');
+                    return;
+                }
+
+                const subject = 'Upcoming Task Reminders from VeryBoard';
+                let body = 'Hello,\n\nHere are your upcoming task reminders:\n\n';
+
+                for (const owner in remindersByOwner) {
+                    if (owner !== 'Unassigned') {
+                        body += `--- For ${owner} ---\n`;
+                        remindersByOwner[owner].forEach(card => {
+                            body += `  - Task: ${card.title}\n`;
+                            body += `    Description: ${card.description}\n`;
+                            body += `    Due Date: ${new Date(card.dueDate).toLocaleDateString()}\n\n`;
+                        });
+                    }
+                }
+
+                const mailtoLink = `mailto:?bcc=${owners.join(',')}&subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
                 
-                remindersList.innerHTML = `<ul>${listHtml}</ul>`;
-                remindersModal.open = true; // Use the 'open' property instead of show()
+                showSnackbar('Opening your email client to send reminders...');
+                window.location.href = mailtoLink;
             }
 
             // --- EVENT LISTENERS ---
@@ -923,6 +1303,9 @@
             saveButton.addEventListener('click', saveBoard);
             loadButton.addEventListener('click', () => fileLoader.click());
             fileLoader.addEventListener('change', loadBoard);
+            const cardLoader = document.getElementById('card-loader');
+            document.getElementById('load-card-button').addEventListener('click', () => cardLoader.click());
+            cardLoader.addEventListener('change', loadCard);
             
             // Reminder Button
             sendRemindersButton.addEventListener('click', checkReminders);
@@ -945,18 +1328,184 @@
                 cardModal.returnValue = 'cancel';
             });
             
+            // Type Change Listener
+            document.getElementById('card-type').addEventListener('change', (e) => {
+                updateParentOptions(e.target.value, null);
+            });
+
             // Modal Delete Button
             deleteButton.addEventListener('click', deleteCardFromModal);
-            
-            // Update reminder info when due date or reminder days change
-            // Use 'input' for md-text-field for better responsiveness
-            document.getElementById('card-due-date').addEventListener('input', (e) => updateReminderInfo(e.target.value));
-            reminderDaysInput.addEventListener('input', () => {
-                if(cardModal.open) {
-                    updateReminderInfo(document.getElementById('card-due-date').value);
-                }
+            document.getElementById('save-card-button').addEventListener('click', saveCard);
+
+            // Cancel Button
+            document.getElementById('cancel-button').addEventListener('click', () => {
+                cardModal.close('cancel');
             });
             
+            // Send Single Reminder
+            document.getElementById('send-card-reminder-button').addEventListener('click', () => {
+                const owner = document.getElementById('card-owner').value;
+                if (!owner) {
+                    showSnackbar('Please enter an owner email first.');
+                    return;
+                }
+
+                const card = {
+                    title: document.getElementById('card-title').value,
+                    description: document.getElementById('card-description').value,
+                    dueDate: document.getElementById('card-due-date').value
+                };
+
+                // Wrap in object structure expected by triggerEmailClient
+                triggerEmailClient({ [owner]: [card] });
+            });
+
+            // Date Picker Enhancement: Open calendar on click
+            const dateField = document.getElementById('card-due-date');
+            dateField.addEventListener('click', () => {
+                try {
+                    const input = dateField.shadowRoot.querySelector('input');
+                    if (input && typeof input.showPicker === 'function') {
+                        input.showPicker();
+                    }
+                } catch (e) {
+                    // Ignore errors (e.g. if already open or not supported)
+                }
+            });
+
+            // The built-in form submission for md-dialog seems to be unreliable in this setup.
+            // We will manually handle the save and close action with a direct click listener.
+            document.querySelector('md-filled-button[form="card-form"][value="save"]').addEventListener('click', (e) => {
+                e.preventDefault(); // Stop the default form submission
+                saveCardFromModal();
+                cardModal.close(); // Manually close the dialog
+            });
+
+            // Update reminder info when due date or reminder days change
+            document.getElementById('card-due-date').addEventListener('input', (e) => updateReminderInfo(e.target.value, document.getElementById('card-reminder-days').value));
+            document.getElementById('card-reminder-days').addEventListener('input', (e) => updateReminderInfo(document.getElementById('card-due-date').value, e.target.value));
+
+            // Comment Rich Text Editor Toolbar
+            document.getElementById('card-comment').addEventListener('input', () => {
+                document.getElementById('card-comment-hidden').value = document.getElementById('card-comment').innerHTML;
+            });
+
+            // Allow opening links with Ctrl+Click and Tooltip logic
+            const commentBox = document.getElementById('card-comment');
+
+            commentBox.addEventListener('click', (e) => {
+                if (e.target.tagName === 'A') {
+                    if (e.ctrlKey || e.metaKey) {
+                        window.open(e.target.href, '_blank');
+                    }
+                }
+            });
+
+            // Tooltip Logic
+            const linkTooltip = document.getElementById('link-tooltip');
+            const tooltipUrl = document.getElementById('tooltip-url');
+            const tooltipGo = document.getElementById('tooltip-go');
+            let tooltipTimeout;
+
+            function showTooltip(target) {
+                clearTimeout(tooltipTimeout);
+                const rect = target.getBoundingClientRect();
+                const url = target.href;
+
+                tooltipUrl.textContent = url;
+                tooltipUrl.href = url;
+
+                // Position below the link
+                linkTooltip.style.top = (rect.bottom + 5) + 'px';
+                linkTooltip.style.left = rect.left + 'px';
+
+                linkTooltip.classList.add('visible');
+            }
+
+            function hideTooltip() {
+                tooltipTimeout = setTimeout(() => {
+                    linkTooltip.classList.remove('visible');
+                }, 300);
+            }
+
+            commentBox.addEventListener('mouseover', (e) => {
+                if (e.target.tagName === 'A') {
+                    showTooltip(e.target);
+                }
+            });
+
+            commentBox.addEventListener('mouseout', (e) => {
+                if (e.target.tagName === 'A') {
+                    hideTooltip();
+                }
+            });
+
+            linkTooltip.addEventListener('mouseover', () => {
+                clearTimeout(tooltipTimeout);
+            });
+
+            linkTooltip.addEventListener('mouseout', () => {
+                hideTooltip();
+            });
+
+            tooltipGo.addEventListener('click', () => {
+                window.open(tooltipUrl.href, '_blank');
+            });
+
+            // --- Rich Text Editor Logic ---
+            const toolbar = document.getElementById('comment-toolbar');
+            const commentEditor = document.getElementById('card-comment');
+            const hiddenComment = document.getElementById('card-comment-hidden');
+
+            function applyFormat(command, value = null) {
+                // We don't need to focus the editor here, as the mousedown prevention
+                // should keep the focus and selection intact.
+                document.execCommand(command, false, value);
+                // Manually sync the hidden input after applying the format
+                hiddenComment.value = commentEditor.innerHTML;
+            }
+
+            // For buttons, we use 'mousedown' to prevent them from stealing focus
+            // from the contenteditable div, which would deselect the text.
+            toolbar.querySelectorAll('button').forEach(button => {
+                button.addEventListener('mousedown', e => {
+                    e.preventDefault(); // This is the key to prevent focus shift
+
+                    const command = button.dataset.command;
+                    if (command === 'createLink') {
+                        const selection = window.getSelection();
+                        let range = null;
+                        if (selection.rangeCount > 0) {
+                            range = selection.getRangeAt(0);
+                        }
+
+                        let url = prompt('Enter a URL:');
+                        if (url) {
+                            if (!/^https?:\/\//i.test(url) && !/^mailto:/i.test(url)) {
+                                url = 'https://' + url;
+                            }
+
+                            if (range) {
+                                selection.removeAllRanges();
+                                selection.addRange(range);
+                            }
+                            applyFormat(command, url);
+                        }
+                    } else {
+                        applyFormat(command);
+                    }
+                });
+            });
+
+            // For select elements, 'change' is the appropriate event to get the new value.
+            // They don't have the same focus-stealing issue as buttons.
+            toolbar.querySelectorAll('select').forEach(select => {
+                select.addEventListener('change', e => {
+                    const command = select.dataset.command;
+                    applyFormat(command, select.value);
+                });
+            });
+
             // Drag-and-Drop Listeners for Swim Lanes
             document.querySelectorAll('.card-list').forEach(lane => {
                 lane.addEventListener('dragover', (e) => {
@@ -996,4 +1545,3 @@
     </script>
 </body>
 </html>
-
